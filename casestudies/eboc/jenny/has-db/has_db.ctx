@@ -1,0 +1,19 @@
+Context has_db
+
+  Sets
+    SERVICE
+    DEVICETYPE
+    
+  Constants
+    HEATING
+    TEMPSENSOR
+    DEVICETYPE_SERVICE
+    HEATER
+
+  Axioms
+    @axm1 partition(DEVICETYPE, {TEMPSENSOR}, {HEATER})
+    @axm2 DEVICETYPE_SERVICE : DEVICETYPE --> SERVICE
+    @axm3 SERVICE = {HEATING}
+    @axm4 DEVICETYPE_SERVICE = {TEMPSENSOR |-> HEATING, HEATER |-> HEATING}
+
+End

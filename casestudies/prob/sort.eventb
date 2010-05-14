@@ -1,0 +1,4 @@
+package(load_event_b_project([],
+  [],
+  [],
+  Error)).

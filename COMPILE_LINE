@@ -1,0 +1,1 @@
+mzc --exe eboc ++lib scheme/lang/reader ++lib planet/planet ++lib srfi/1 ++lib srfi/42 ++lib srfi/78 ++lib srfi/67 ++lib srfi/43 ++lib srfi/13 main.scm

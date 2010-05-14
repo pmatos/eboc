@@ -1,0 +1,11 @@
+Context rc_0
+  Sets
+    L /* L is the set of ALL possible links in a network.
+         For the moment, this set is not related to the nodes.
+         They will be related in context rc_2
+       */
+
+  Axioms
+    finite(L)
+
+End    

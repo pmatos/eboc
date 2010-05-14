@@ -1,0 +1,5 @@
+June 16, 2009
+     * Add indentation after any, when, then, where
+     * Add highlighting to variables and operators
+     * Add symbol replacement by unicode
+     * Create variable to enable/disable unicode replacement

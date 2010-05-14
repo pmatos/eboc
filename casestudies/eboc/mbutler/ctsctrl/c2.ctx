@@ -1,0 +1,19 @@
+Context c2 
+	Extends c1 
+
+	Constants 
+		LT 
+    HT 
+    DU 
+    DD 
+    C  
+    A  
+
+	Axioms
+		@axm1 L < LT  &  LT < HT  &  HT < H
+		@axm2 DD : 1..(H-L)
+		@axm5 DU : 1..(H-L)
+		@axm3 C : NAT
+		@axm4 A : NAT
+	
+End

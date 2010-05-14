@@ -1,0 +1,6 @@
+Context TotalFun
+
+  Sets
+    FACE := {ftop, fbot, fleft}
+
+End

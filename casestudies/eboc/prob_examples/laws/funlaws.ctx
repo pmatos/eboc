@@ -1,0 +1,7 @@
+Context FunLaws
+
+  Sets 
+    setX := {el1, el2}
+    setY := {y1, y2}
+
+End

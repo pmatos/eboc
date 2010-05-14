@@ -1,0 +1,10 @@
+Context JukeboxC
+  Sets
+    Track := {t1, t2}
+
+  Constants
+    limit 
+    
+  Axioms
+    limit > 0
+End

@@ -1,0 +1,18 @@
+Context earley_ctx_1
+
+  Extends earley_ctx_0
+
+  Constants 
+   left_inv
+   size_l_inv
+
+  Axioms
+    @axm1 left_inv : N --> (NAT >+> P)
+    @axm2 size_l_inv : N --> NAT
+    @axm3 ! n . n : N => left_inv(n) : (1 .. (0 + size_l_inv(n))) >-> P
+    @axm4 ! p . p : ran(left_inv(cleft(p)))
+    @axm5 ! x, y . y : N & x : ran(left_inv(y)) => y = cleft(x)
+    @axm6 left_inv(cleft(axiom)) = {1 |-> axiom}
+    @axm7 ! n, i . n : N & i : dom(left_inv(n)) => cleft(left_inv(n)(i)) = n
+
+End

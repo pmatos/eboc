@@ -1,0 +1,6 @@
+Context Any
+
+  Sets
+    COLOURS := {red, green, blue}
+
+End

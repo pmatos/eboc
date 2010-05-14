@@ -1,0 +1,27 @@
+Context fctx
+
+  Sets
+    OBJECT
+
+  Constants
+    root // root object
+    objrel // type of relation on objects
+    tcl // transitive closure of an objrel
+    objfn // type of function on objects
+
+  Axioms
+    @axm1 root : OBJECT
+    @axm2 objfn = OBJECT \ {root} +-> OBJECT
+    @axm4 objrel = OBJECT <-> OBJECT
+    @axm3 tcl : objrel --> objrel
+    @axm5 ! r . (r : objrel => r <: tcl(r)) // r included in tcl(r)
+    @axm6 ! r . (r : objrel => r ; tcl(r) <: tcl(r)) // unfolding included in tcl(r)
+    @axm7 ! r, t . (r : objrel & r <: t & r ; t <: t => tcl(r) <: t) // tcl(r) is least
+
+  Theorems
+    @thm5 objfn <: objrel 
+    @thm1 ! r . r : objrel => tcl(r) = r \/ (r ; tcl(r)) // tcl(r) is a fixed point
+    @thm4 btrue
+    @thm2 ! t . t : objfn & ( ! s . s <: t ~ [s] => s = {}) => tcl(t) /\ (OBJECT <| id) = {} // No loop theorem 
+    
+End

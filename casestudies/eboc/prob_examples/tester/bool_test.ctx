@@ -1,0 +1,12 @@
+Context bool_test
+
+  Sets 
+    Name
+    
+  Constants
+    scope_Name
+
+  Axioms
+    scope_Name = 1 .. 2
+
+End

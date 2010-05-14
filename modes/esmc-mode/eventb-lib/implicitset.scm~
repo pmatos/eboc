@@ -1,0 +1,14 @@
+#lang scheme
+
+(require "set.scm")
+
+(define (implicit-set a b)
+  (new ImplicitSet% [min a] [max b]))
+
+(define ImplicitSet%
+  (class Set%
+    
+
+
+(provide implicit-set
+         ImplicitSet%)

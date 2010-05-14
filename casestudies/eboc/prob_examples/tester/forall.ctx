@@ -1,0 +1,6 @@
+Context ForAll
+
+  Sets
+    COLOURS := {red, green, blue}
+
+End

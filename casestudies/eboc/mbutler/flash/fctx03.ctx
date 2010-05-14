@@ -1,0 +1,9 @@
+Context fctx03
+
+  Sees fctx02
+
+  Sets
+    USER GROUP PERMISSION
+
+  Constants
+    admin su rbo wbo xbo rbg wbg xbg rbw wbw xbw RPerm WPerm XPerm

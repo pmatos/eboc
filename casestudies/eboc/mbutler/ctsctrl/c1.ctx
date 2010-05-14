@@ -1,0 +1,14 @@
+Context c1
+
+	Constants 
+		L 
+		H 
+	
+	Axioms
+		@axm1 L : NAT
+		@axm2 H > L
+	
+	Theorems
+		@thm1 L .. H /= {}
+
+End

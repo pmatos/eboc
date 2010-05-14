@@ -1,0 +1,46 @@
+Context earley_ctx_0
+
+  Sets
+    S // Set of symbols
+    P // Set of productions
+
+  Constants
+    N // Subset of non-terminal symbols
+    s // size of input string
+    input // Input string
+    cleft // Non-terminal symbol associated with a production
+    csize // Size of the right hand part of a production
+    cright // Right hand part of a production
+    axiom // First production
+    Init 
+    Expr
+    Term
+    Factor
+    plus
+    mult 
+    number
+    Pr2
+    Pr3
+    Pr4
+    Pr5
+    Pr6
+
+  Axioms
+    @axm1 N <: S // Non-terminal symbols are symbols
+    @axm3 s : NAT // Size of input
+    @axm4 input : 1 .. s --> (S \ N) // Input (string of terminal symbols)
+    @axm5 cleft : P --> NAT // The left part of a production is a non-terminal symbol
+    @axm6 csize : P --> NAT1 // Size of right part of a production
+    @axm7 cright P --> (NAT +-> S) // Right part of a production
+    @axm8 ! p . cright(p) : (1 .. (csize(p) + 0)) --> S // The right part of a production is a string of symbols
+    @axm12 axiom : P // The first production
+    @axm13 partition(S, {Init}, {Expr}, {Term}, {Factor}, {plus}, {mult}, {number}) // axioms 14 to 34 are the expansions of this partition
+    @axm35 partition(P, {axiom}, {Pr2}, {Pr3}, {Pr4}, {Pr5}, {Pr6}) // axioms 36 to 50 are the expansions of this partition
+    @axm51 N = {Init, Expr, Term, Factor}
+    @axm52 s = 5
+    @axm53 input = {1 |-> number, 2 |-> plus, 3 |-> number, 4 |-> mult, 5 |-> number}
+    @axm55 cleft = {axiom |-> Init, Pr2 |-> Expr, Pr3 |-> Expr, Pr4 |-> Term, Pr5 |-> Term, Pr6 |-> Factor}
+    @axm54 csize = {axiom |-> 1, Pr2 |-> 1, Pr3 |-> 3, Pr4 |-> 1, Pr5 |-> 3, Pr6 |-> 1}
+    @axm56 cright = {axiom |-> {1 |-> Expr}, Pr2 |-> {1 |-> Term}, Pr3 |-> {1 |-> Expr, 2 |-> plus, 3 |-> Term}, Pr4 |-> {1 |-> Factor}, Pr5 |-> {1 |-> Term, 2 |-> mult, 3 |-> Factor}, Pr6 |-> {1 |-> number}}
+
+End

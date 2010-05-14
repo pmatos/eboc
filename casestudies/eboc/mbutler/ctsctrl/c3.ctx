@@ -1,0 +1,20 @@
+Context c3 
+
+	Extends c2 
+
+	Axioms
+		@axm2 A <= C
+    @axm4 LT  >=  L + (DD*(A+C+1))
+		@axm5 HT  >=  H - (DU*(A+C+1))
+	
+	Theorems
+		@thm10 LT <= HT
+		@thm9 LT>=L+DD*C+DD+DD*A // required for controlMed/inv9
+		@thm3 L<=H - DU*C - DU
+		@thm4 LT+DU*A<=H - DU*C - DU
+		@thm5 LT <= H - DU*C - DU
+		@thm6 HT+DU*A<=H - DU*C - DU
+		@thm7 HT >= L+DD*C+DD // controlHigh/inv9
+		@thm8 HT - DD*A >= L+DD*C+DD
+
+End

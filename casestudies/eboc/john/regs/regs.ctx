@@ -1,0 +1,29 @@
+Context Regs
+
+  Sets
+    Opcode
+
+  Constants
+    RFSIZE 
+    Register 
+    ArithRROpcode
+    IMSIZE
+    IMem
+    Ra
+    Rb
+    Rr
+    NOP
+
+  Axioms
+    RFSIZE : NAT
+    Register = 0 .. RFSIZE
+    ArithRROpcode <<: Opcode
+    IMSIZE : NAT
+    IMem : 0 .. IMSIZE >-> Opcode
+    Ra : Opcode --> Register
+    Rb : Opcode --> Register
+    Rr : Opcode --> Register
+    NOP : Opcode
+    NOP /: ArithRROpcode
+    
+End

@@ -1,0 +1,5 @@
+Context huffman
+	Sets
+		alphabet := {a, e, i, o, u}
+
+End

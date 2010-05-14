@@ -1,0 +1,42 @@
+     * GENERIC
+       -------
+       ** Solve TODOs in the code
+
+     * ERROR HANDLING
+       --------------
+		   ** Remove all error calls and replace them by proper error handlers.
+		   ** Improving debugging controls.
+		   ** Generate graphs:
+		      *** states search / states queued
+		      *** 3d bar graph: priority of states queues / states searched
+		      **** or 2d graph with average priority of states queues averaged
+		      	   per all states searched
+     * PARSER
+       ------
+			 ** Handle partition predicate along with the use of enumerated sets as defined through partition or other wierd forms like the axiomatic expansion (as shown in pre-rodin-1.0), etc.
+			 ** Allow comments in the beginning of the machine / context file
+			 ** Handling of finite(.)
+       ** Allow set-expressions to be defined in terms of variable types. The variable type can be inferred from the expression and shown to the user.
+			 ** Allow action lhs of the form f(E) := E'?
+			 *** to be simplified to f := f <+ {E |-> E'}
+			 ** Improve error reporting.
+			 ** Warn user if he defines names which are a change of case of restricted keywords: False instead of FALSE.
+
+     * MODES
+       -----
+		 	 ** Specific option to specify setbound for specific deferred sets.
+		         ** Implement SAT encoding and SAT mode for verification of predicates.
+
+     * CASE STUDIES
+       ------------
+       ** Add ProB examples (after converting from ProB syntax)
+       ** Add Examples shown in the Event-B wiki
+       ** Add Jenny Models
+
+     * THEORETICAL
+       -----------
+			 ** Handle quantifiers...
+			 ** Handle lambda expressions and set comprehensions
+			 ** Handling deferred sets without bounding
+			 ** handle infinite sets in expressions. Eboc clashes with x : NAT, but this could be naively reduced to (natural? var:x)
+			 *** the real problem is how to evaluate expressions like : INT \ {2 * x | x : INT}, e esta hein? This the set of integers which are not multiple of 2.

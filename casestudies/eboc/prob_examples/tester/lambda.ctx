@@ -1,0 +1,6 @@
+Context Lambda
+
+  Sets
+    COLOURS := {red, green, blue}
+
+End

@@ -1,0 +1,8 @@
+Context consts
+
+  Constants c1 c2
+
+  Axioms
+    c1 < c2
+
+End

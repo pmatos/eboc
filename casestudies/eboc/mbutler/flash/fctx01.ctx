@@ -1,0 +1,8 @@
+Context fctx01
+
+  Sees fctx
+
+  Theorems 
+    @thm1 btrue // has a couple of theorems but nothing else
+
+End    

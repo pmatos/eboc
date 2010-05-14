@@ -1,0 +1,17 @@
+Context rc_3
+
+  Extends rc_2
+  
+  Constants
+    fst snd link
+
+  Axioms
+    @axm1 fst : L ->> N // First node of a link
+    @axm2 snd : L ->> N // Second node of a link
+    @axm3 link : N ** N >->> L //Bijection between pairs of nodes and link
+    @axm4 ! n, m . n : N & m : N => fst(link(n |-> m)) = n & snd(link(n |-> m)) = m // Defining first and second for link (n|->m)
+    @axm5 ! l . l : L => link(fst(l) |-> snd(l)) = l // Defining l as the link joining fst(l) to snd(l)
+
+End    
+    
+    

@@ -1,0 +1,11 @@
+Context rc_1
+
+  Extends rc_0
+
+  Sets N // The set N is the set of all nodes in the network
+
+  Axioms
+    @axm1 finite(N)
+
+End    
+

@@ -1,0 +1,14 @@
+Context rc_2
+
+  Extends rc_1
+    
+  Constants
+    parity
+
+  Axioms
+    @axm1 parity : NAT --> {0, 1}
+    @axm2 parity(0) = 0
+    @axm3 !n . n : NAT => parity(n+1)  = 1 - parity(n)
+
+End    
+  

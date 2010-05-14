@@ -1,0 +1,18 @@
+Context fctx02
+
+  Sees fctx01
+
+  Sets
+    DATA NAME DATE
+
+  Constants
+    CONTENT rname dfdate nowdate
+
+  Axioms
+    @axm1 CONTENT = NAT +-> DATA
+    @axm2 {} : CONTENT
+    @axm3 rname : NAME
+    @axm4 dfdate : DATE
+    @axm5 nowdate : DATE
+
+End
