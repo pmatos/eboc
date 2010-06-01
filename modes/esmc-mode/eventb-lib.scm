@@ -23,7 +23,44 @@
 
 (define (evaluate-ast ast state)
   
-  (match
+  (match ast
+    
+    ;; Evaluation of Unary Expressions
+   
+    ; converse
+    [(struct Expression-UnOp ('converse arg))
+     (error "Unimplemented.")]
+    
+    ; unary minus
+    [(struct Expression-UnOp ('uminus arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('card arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('pow arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('pow1 arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('union arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('inter arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('dom arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('ran arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('min arg))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-UnOp ('max arg))
+     (error "Unimplemented.")]))
 
 ;                              
 ;                              
