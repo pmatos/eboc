@@ -1,9 +1,0 @@
-#lang scheme
-
-(require "value.scm")
-
-(define Set%
-  (class* object%
-    (iSet)
-    
-    
