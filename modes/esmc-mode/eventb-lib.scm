@@ -1,5 +1,8 @@
 #lang scheme
 
+(require scheme/match)
+(require "../ast/predexpr.scm")
+
 ;                                                                                             
 ;                                                                                             
 ;                                                                                             
@@ -15,7 +18,12 @@
 ;            ;                                                                                
 ;          ;;                                                                                 
 ;                                                                                             
+;; Evaluation of predicates and expressions is done case by case
+;; by matching against the structures that define the AST.
 
+(define (evaluate-ast ast state)
+  
+  (match
 
 ;                              
 ;                              
