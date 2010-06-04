@@ -37,7 +37,13 @@
     
     ; card: POW(a) -> INT
     [(struct Expression-UnOp ('card arg))
-     (error "Unimplemented.")]
+     
+     (match (eval-ast arg state)
+       [(struct Set-Enumeration (exprs))
+        (make-Integer-Literal (length exprs))]
+     
+       [_
+        (error "No rules match to evaluate card of " arg)])]
     
     [(struct Expression-UnOp ('pow arg))
      (error "Unimplemented.")]
