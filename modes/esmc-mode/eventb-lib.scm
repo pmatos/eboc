@@ -180,7 +180,11 @@
     ; expn: INT x INT -> INT
     [(struct Expression-BinOp ('expn arg1 arg2))
      (make-Integer-Literal (expt (Integer-Literal-val arg1)
-                                 (Integer-Literal-val arg2)))]))
+                                 (Integer-Literal-val arg2)))]
+    
+    [_
+     (error "No rules match to evaluate: ~a on state ~a" ast state)]))
+
 
 ;                              
 ;                              
