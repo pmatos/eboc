@@ -32,8 +32,7 @@
          (struct-out Integer-Literal)
          (struct-out Expression-Bool)
          (struct-out Lambda-Expression)
-         (struct-out Set-Comprehension)
-         (struct-out Set-Enumeration))
+         (struct-out Set-Comprehension))
      
 (define e 
   (match-lambda 
@@ -793,6 +792,7 @@
  [struct Expression-BinOp ((op (apply one-of/c (available-ops expression-binop-table)))
                            (arg1 expression?)
                            (arg2 expression?))]
+ [struct Set-Enumeration ((exprs (listof expression?)))]
  [struct Expr/wt ((type type?) (expr expr/wot?))]
  [struct (Variable Identifier) ((name symbol?))]
  [Variable-name (Variable? . -> . symbol?)]
