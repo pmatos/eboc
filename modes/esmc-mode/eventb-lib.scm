@@ -146,7 +146,11 @@
      (error "Unimplemented.")]
     
     [(struct Expression-BinOp ('upto arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Set-Enumeration 
+      (map make-Integer-Literal
+           (build-list (+ 1 (- (Integer-Literal-val arg2)
+                               (Integer-Literal-val arg1)))
+                       (lambda (x) (+ x (Integer-Literal-val arg1))))))]
     
     ; plus: INT x INT -> INT
     [(struct Expression-BinOp ('plus arg1 arg2))
@@ -170,8 +174,8 @@
     
     ; mod: INT x INT -> INT
     [(struct Expression-BinOp ('mod arg1 arg2))
-     (make-Integer-Literal (mod (Integer-Literal-val arg1)
-                                (Integer-Literal-val arg2)))]
+     (make-Integer-Literal (modulo (Integer-Literal-val arg1)
+                                   (Integer-Literal-val arg2)))]
     
     ; expn: INT x INT -> INT
     [(struct Expression-BinOp ('expn arg1 arg2))
