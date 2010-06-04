@@ -33,7 +33,7 @@
     
     ; uminus: INT -> INT
     [(struct Expression-UnOp ('uminus arg))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (- (Integer-Literal-val arg)))]
     
     ; card: POW(a) -> INT
     [(struct Expression-UnOp ('card arg))
