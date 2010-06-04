@@ -27,14 +27,15 @@
     
     ;; Evaluation of Unary Expressions
    
-    ; converse
+    ; converse: POW(a x b) -> POW(b x a)
     [(struct Expression-UnOp ('converse arg))
      (error "Unimplemented.")]
     
-    ; unary minus
+    ; uminus: INT -> INT
     [(struct Expression-UnOp ('uminus arg))
      (error "Unimplemented.")]
     
+    ; card: POW(a) -> INT
     [(struct Expression-UnOp ('card arg))
      (error "Unimplemented.")]
     
@@ -56,10 +57,113 @@
     [(struct Expression-UnOp ('ran arg))
      (error "Unimplemented.")]
     
+    ; min: POW(INT) -> INT
     [(struct Expression-UnOp ('min arg))
      (error "Unimplemented.")]
     
+    ; max: POW(INT) -> INT
     [(struct Expression-UnOp ('max arg))
+     (error "Unimplemented.")]
+    
+    ;; Evaluation of Binary Expressions
+    
+    [(struct Expression-BinOp ('funimage arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('relimage arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('mapsto arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('rel arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('trel arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('srel arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('pfun arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('tfun arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('pinj arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('tinj arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('psur arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('tsur arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('tbij arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('bunion arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('binter arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('setminus arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('cprod arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('dprod arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('pprod arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('bcomp arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('fcomp arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('ovl arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('domres arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('domsub arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('ranres arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('ransub arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('upto arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('plus arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('minus arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('mul arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('div arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('mod arg1 arg2))
+     (error "Unimplemented.")]
+    
+    [(struct Expression-BinOp ('expn arg1 arg2))
      (error "Unimplemented.")]))
 
 ;                              
