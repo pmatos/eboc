@@ -21,7 +21,7 @@
 ;; Evaluation of predicates and expressions is done case by case
 ;; by matching against the structures that define the AST.
 
-(define (evaluate-ast ast state)
+(define (eval-ast ast state)
   
   (match ast
     
@@ -148,23 +148,35 @@
     [(struct Expression-BinOp ('upto arg1 arg2))
      (error "Unimplemented.")]
     
+    ; plus: INT x INT -> INT
     [(struct Expression-BinOp ('plus arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (+ (Integer-Literal-val arg1)
+                              (Integer-Literal-val arg2)))]
     
+    ; minus: INT x INT -> INT
     [(struct Expression-BinOp ('minus arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (- (Integer-Literal-val arg1)
+                              (Integer-Literal-val arg2)))]
     
+    ; mul: INT x INT -> INT
     [(struct Expression-BinOp ('mul arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (* (Integer-Literal-val arg1)
+                              (Integer-Literal-val arg2)))]
     
+    ; div: INT x INT -> INT
     [(struct Expression-BinOp ('div arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (quotient (Integer-Literal-val arg1)
+                                     (Integer-Literal-val arg2)))]
     
+    ; mod: INT x INT -> INT
     [(struct Expression-BinOp ('mod arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Integer-Literal (mod (Integer-Literal-val arg1)
+                                (Integer-Literal-val arg2)))]
     
+    ; expn: INT x INT -> INT
     [(struct Expression-BinOp ('expn arg1 arg2))
-     (error "Unimplemented.")]))
+     (make-Integer-Literal (expt (Integer-Literal-val arg1)
+                                 (Integer-Literal-val arg2)))]))
 
 ;                              
 ;                              
