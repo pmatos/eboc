@@ -38,12 +38,15 @@
     ; card: POW(a) -> INT
     [(struct Expression-UnOp ('card arg))
      
-     (match (eval-ast arg state)
-       [(struct Set-Enumeration (exprs))
-        (make-Integer-Literal (length exprs))]
-     
-       [_
-        (error "No rules match to evaluate card of " arg)])]
+     (let ([argv (eval-ast arg state)])
+       
+       (match (eval-ast arg state)
+         
+         [(struct Set-Enumeration (exprs))
+          (make-Integer-Literal (length exprs))]
+         
+         [_
+          (error "No rules match to evaluate card of " argv)]))]
     
     [(struct Expression-UnOp ('pow arg))
      (error "Unimplemented.")]
@@ -65,11 +68,29 @@
     
     ; min: POW(INT) -> INT
     [(struct Expression-UnOp ('min arg))
-     (error "Unimplemented.")]
+
+     (let ([argv (eval-ast arg state)])
+     
+       (match (eval-ast ast state)
+         
+         [(struct Set-Enumeration (exprs))
+          (first exprs)]
+       
+         [_
+          (error "No rules match to evaluate min of " argv)]))]
     
     ; max: POW(INT) -> INT
     [(struct Expression-UnOp ('max arg))
-     (error "Unimplemented.")]
+          (let ([argv (eval-ast arg state)])
+     
+       (match (eval-ast ast state)
+         
+         [(struct Set-Enumeration (exprs))
+          (last exprs)]
+       
+         [_
+          (error "No rules match to evaluate min of " argv)]))]
+
     
     ;; Evaluation of Binary Expressions
     
@@ -278,43 +299,43 @@
 ;           [else (eval-expression sexpr state)])]))
 ;
 ;
-;;                                                                                
-;;                                                     ;                          
-;;    ;;;;  ;           ;                ;;;;;                    ;               
-;;   ;;   ; ;           ;                ;   ;;                   ;               
-;;   ;    ;;;;;  ;;;; ;;;;;   ;;;        ;    ; ;;;; ;;;   ;;;; ;;;;;   ;;;   ;;;;
-;;    ;;;   ;        ;  ;    ;   ;       ;   ;; ;; ;   ;   ;   ;  ;    ;   ;  ;; ;
-;;      ;;; ;     ;;;;  ;    ;;;;;       ;;;;;  ;      ;   ;   ;  ;    ;;;;;  ;   
-;;        ; ;    ;   ;  ;    ;           ;      ;      ;   ;   ;  ;    ;      ;   
-;;   ;    ; ;    ;  ;;  ;    ;;          ;      ;      ;   ;   ;  ;    ;;     ;   
-;;    ;;;;  ;;;   ;;;;  ;;;   ;;;;       ;      ;    ;;;;; ;   ;  ;;;   ;;;;  ;   
-;;                                                                                
-;;                                                                                
-;;                                                                                
-;
-;
-;(define (print-state state (out (current-output-port)))
-;  (letrec ([print-value
-;            (lambda (val (out (current-output-port)))
-;              (cond [(or (integer? val) (symbol? val)) (fprintf out "~a" val)]
-;                    [(pair? val) 
-;                     (print-value (car val) out)
-;                     (fprintf out " |-> ")
-;                     (print-value (cdr val) out)]
-;                    [(set:set? val)
-;                     (fprintf out "{~a}"
-;                              (apply string-append 
-;                                     (add-between (map (lambda (v)
-;                                                         (let ([o (open-output-string)])
-;                                                           (print-value v o)
-;                                                           (get-output-string o)))
-;                                                       (set:elements val))
-;                                                  ", ")))]
-;                    [else
-;                     (error 'print-state "Can't print value of state: " val)]))])
-;    (parameterize ([current-output-port out])
-;      (for-each (match-lambda ((cons var val) 
-;                               (printf "~a : " var)
-;                               (print-value val out)
-;                               (newline out)))
-;                state))))
+;                                                                                
+;                                                     ;                          
+;    ;;;;  ;           ;                ;;;;;                    ;               
+;   ;;   ; ;           ;                ;   ;;                   ;               
+;   ;    ;;;;;  ;;;; ;;;;;   ;;;        ;    ; ;;;; ;;;   ;;;; ;;;;;   ;;;   ;;;;
+;    ;;;   ;        ;  ;    ;   ;       ;   ;; ;; ;   ;   ;   ;  ;    ;   ;  ;; ;
+;      ;;; ;     ;;;;  ;    ;;;;;       ;;;;;  ;      ;   ;   ;  ;    ;;;;;  ;   
+;        ; ;    ;   ;  ;    ;           ;      ;      ;   ;   ;  ;    ;      ;   
+;   ;    ; ;    ;  ;;  ;    ;;          ;      ;      ;   ;   ;  ;    ;;     ;   
+;    ;;;;  ;;;   ;;;;  ;;;   ;;;;       ;      ;    ;;;;; ;   ;  ;;;   ;;;;  ;   
+;                                                                                
+;                                                                                
+;                                                                                
+
+
+(define (print-state state (out (current-output-port)))
+  (letrec ([print-value
+            (lambda (val (out (current-output-port)))
+              (cond [(or (integer? val) (symbol? val)) (fprintf out "~a" val)]
+                    [(pair? val) 
+                     (print-value (car val) out)
+                     (fprintf out " |-> ")
+                     (print-value (cdr val) out)]
+                    [(set:set? val)
+                     (fprintf out "{~a}"
+                              (apply string-append 
+                                     (add-between (map (lambda (v)
+                                                         (let ([o (open-output-string)])
+                                                           (print-value v o)
+                                                           (get-output-string o)))
+                                                       (set:elements val))
+                                                  ", ")))]
+                    [else
+                     (error 'print-state "Can't print value of state: " val)]))])
+    (parameterize ([current-output-port out])
+      (for-each (match-lambda ((cons var val) 
+                               (printf "~a : " var)
+                               (print-value val out)
+                               (newline out)))
+                state))))
