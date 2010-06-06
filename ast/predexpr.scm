@@ -1,6 +1,10 @@
-#lang scheme
+#lang scheme/base
 
-(require (only-in srfi/1 every lset-union lset-difference)
+(require scheme/serialize
+         scheme/contract
+         scheme/match
+         scheme/list
+         (only-in srfi/1 every lset-union lset-difference)
          (only-in srfi/13 string-drop-right)
          "../params.scm"
          "../utils.scm"
@@ -135,7 +139,7 @@
      (and (type-expression? arg1) (type-expression? arg2)))
     (else #f)))
 
-(define-struct Expression-Literal
+(define-serializable-struct Expression-Literal
   (val)
   #:guard 
   (lambda (val type-name)
@@ -147,7 +151,7 @@
 (define (pp-Expression-Literal struct  (port (current-output-port)))
   (print-table-constant expression-literal-table (Expression-Literal-val struct) port))
 
-(define-struct Expression-Bool
+(define-serializable-struct Expression-Bool
   (pred)
   #:guard 
   (lambda (pred type-name)
@@ -161,7 +165,7 @@
 (define (pp-Expression-Bool struct (port (current-output-port)))
   (fprintf port "bool(~a)" (Expression-Bool-pred struct)))
 
-(define-struct Integer-Literal
+(define-serializable-struct Integer-Literal
   (val)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -170,7 +174,7 @@
 (define (pp-Integer-Literal struct (port (current-output-port)))
   (fprintf port "~a" (Integer-Literal-val struct)))
                
-(define-struct Expression-UnOp
+(define-serializable-struct Expression-UnOp
   (op arg)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -182,7 +186,7 @@
                          (Expression-UnOp-arg struct)
                          port))
 
-(define-struct Expression-BinOp
+(define-serializable-struct Expression-BinOp
   (op arg1 arg2)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -195,7 +199,7 @@
                          (Expression-BinOp-arg2 struct)
                          port))
 
-(define-struct Lambda-Expression
+(define-serializable-struct Lambda-Expression
   (id-pattern ;: Variable-Pattern)
    pred ;: Predicate)
    expr ;: Expression)))
@@ -206,7 +210,7 @@
 
 ; Set-Comprehension-Op-Type (U 'none 'union 'inter))
 
-(define-struct Set-Comprehension
+(define-serializable-struct Set-Comprehension
   (comp-op ; Set-Comprehension-Op-Type)
    vars ; (Listof Typed-Variable))
    pred ; Predicate)
@@ -216,7 +220,7 @@
 (define (pp-Set-Comprehension struct (port (current-output-port)))
   (fprintf port "<SET-COMPREHENSION>"))
 
-(define-struct Set-Enumeration
+(define-serializable-struct Set-Enumeration
   (exprs)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -236,7 +240,7 @@
                     ", ")))
     (printf "}")))
 
-(define-struct Variable-Pair
+(define-serializable-struct Variable-Pair
   (car cdr)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -395,7 +399,7 @@
 ;                                                                               
 ;                                                                               
 ;
-(define-struct Identifier
+(define-serializable-struct Identifier
   (name)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -481,7 +485,7 @@
 (define (predicate? u)
   (anyof? (list Predicate-Literal? Predicate-UnOp? Predicate-BinOp? Predicate-RelOp? Quantifier? Predicate-Finite? Predicate-Partition?) u))
 
-(define-struct Predicate-Literal
+(define-serializable-struct Predicate-Literal
   (lit)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -504,7 +508,7 @@
      (make-Quantifier quant (subst-in-predicate var subst) (subst-in-predicate body subst)))))
                          
 
-(define-struct Predicate-UnOp
+(define-serializable-struct Predicate-UnOp
   (op arg)
   #:guard 
   (lambda (op arg type-name)
@@ -522,7 +526,7 @@
                          (Predicate-UnOp-arg struct)
                          port))
 
-(define-struct Predicate-BinOp
+(define-serializable-struct Predicate-BinOp
   (op arg1 arg2)
   #:guard 
   (lambda (op arg1 arg2 type-name)
@@ -542,7 +546,7 @@
                          (Predicate-BinOp-arg2 struct)
                          port))
 
-(define-struct Predicate-RelOp
+(define-serializable-struct Predicate-RelOp
   (op arg1 arg2)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -555,7 +559,7 @@
                          (Predicate-RelOp-arg2 struct)
                          port))
 
-(define-struct Predicate-Partition
+(define-serializable-struct Predicate-Partition
   (args)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -572,7 +576,7 @@
            (fprintf port "~a, " (first rest-args))
            (loop (rest rest-args))])))
 
-(define-struct Predicate-Finite
+(define-serializable-struct Predicate-Finite
   (expr)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -581,7 +585,7 @@
 (define (pp-Predicate-Finite struct (port (current-output-port)))
   (fprintf port "finite(~a)" (Predicate-Finite-expr struct)))
 
-(define-struct Quantifier
+(define-serializable-struct Quantifier
   (quant var body)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -609,7 +613,7 @@
 ;                                                                                      
 ;                                                                                  ; ;;
 ;; Enumerated sets are composed of set literals : uninterpreted symbols
-(define-struct (Set-Literal Identifier)
+(define-serializable-struct (Set-Literal Identifier)
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -645,7 +649,7 @@
 ;                                                                 
 ;                                                                 
 
-(define-struct (Constant Identifier)
+(define-serializable-struct (Constant Identifier)
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -681,7 +685,7 @@
 ;                              
 ;                              
 
-(define-struct (Set Identifier)
+(define-serializable-struct (Set Identifier)
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -721,7 +725,7 @@
          typed-variable->typed-post-variable
          pp-Variable)
 
-(define-struct (Variable Identifier)
+(define-serializable-struct (Variable Identifier)
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
