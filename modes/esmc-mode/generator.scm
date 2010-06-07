@@ -1,7 +1,6 @@
-#lang scheme
+#lang scheme/base
 
 (require scheme/match
-         "../../ast2sexpr.scm"
          "../../ast.scm"
          "../../utils.scm")
 
@@ -100,7 +99,7 @@ The procedures generated are:
         [action-name (event-action-proc-name name)])
     (pretty-print `(define (,guard-name state)
                      ;(printf "~nGenerating deterministic guard for ~a with state ~a~n." ',guard-name state)
-                     (let ([enabled? (eval-predicate ',(predicate->sexpr guard 'eb-) state)]
+                     (let ([enabled? (eval-predicate ',(serialize guard 'eb-) state)]
                            [done? #f])
                        (lambda (msg)
                          ;(printf "~n~nPassing msg ~a to guard ~a in state ~a.~n" msg ',guard-name state)
@@ -118,8 +117,8 @@ The procedures generated are:
         [action-name (event-action-proc-name name)])
     (pretty-print `(define (,guard-name state)
                      ;(printf "~nGenerating non-deterministic guard ~a with state ~a~n." ',guard-name state)
-                     (let* ([enum (type-list-enumerator ',(append (map type->sexpr (map Expr/wt-type locals))
-                                                                  (map type->sexpr (map Expr/wt-type consts))))]
+                     (let* ([enum (type-list-enumerator ',(append (map serialize (map Expr/wt-type locals))
+                                                                  (map serialize (map Expr/wt-type consts))))]
                             [next-enum (enum)]
                             [next-prt (enum 'prt)])
                        (lambda (msg)
@@ -129,10 +128,10 @@ The procedures generated are:
                            [(pre-stt) state]
                            [(ev-name) ',name]
                            [(stt) ;; may return #f in which case there is no state from this try
-                            (let ([local-state (map cons ',(map (compose expression->sexpr Expr/wt-expr) (append locals consts)) (to-eb-values next-enum))])
+                            (let ([local-state (map cons ',(map (compose serialize Expr/wt-expr) (append locals consts)) (to-eb-values next-enum))])
                               ;(printf "Returning next enumeration ~a for guard ~a with local state ~a.~n" next-enum ',guard-name local-state)
                               (begin0
-                                (if (eval-predicate ',(predicate->sexpr (if (null? axioms)
+                                (if (eval-predicate ',(serialize (if (null? axioms)
                                                                             guard
                                                                             (make-Predicate-BinOp 'land 
                                                                                                   guard 
@@ -163,10 +162,10 @@ The procedures generated are:
                                                                  (lambda (a) (eval-expression (cdr assign-pair) state local-state))))) 
                                             state
                                             ',(let ([actions (map cons 
-                                                                  (append (map (compose expression->sexpr Expr/wt-expr) (Assign-Action-lhs action))
-                                                                          (map expression->sexpr consts))
-                                                                  (append (map (lambda (act) (expression->sexpr act 'eb-)) (Assign-Action-rhs action))
-                                                                          (map expression->sexpr consts)))])
+                                                                  (append (map (compose serialize Expr/wt-expr) (Assign-Action-lhs action))
+                                                                          (map serialize consts))
+                                                                  (append (map (lambda (act) (serialize act 'eb-)) (Assign-Action-rhs action))
+                                                                          (map serialize consts)))])
                                                 ;(printf "Generated actions for ~a:~nAction: ~a~nExpr: ~a~n" name action actions) 
                                                 actions))])
                        ;(printf "Execution action ~a with state ~a and local state ~a resulting in state ~a.~n" ',action-name state local-state newstate)
@@ -177,7 +176,7 @@ The procedures generated are:
   (let ([prop-name (prop-proc-name name)])
     (pretty-print `(define (,prop-name state)
                      ;(printf "Checking property ~a on state ~a.~n" ',prop-name state)
-                     (eval-predicate ',(predicate->sexpr prop 'eb-) state))
+                     (eval-predicate ',(serialize prop 'eb-) state))
                   fp)))
 
 ;; inits should be a list of at most 2 elements: an Assign-Action and Suchthat-Assign-Action
@@ -202,8 +201,8 @@ The procedures generated are:
    `(register-initialisation! (,(event-guard-proc-name '*Initialisation*) 
                                ',(map (lambda (eset)
                                         (let ([set/cons (enumerated-set->set-enumeration/cons eset)])
-                                          (cons (expression->sexpr (car set/cons))
-                                                (expression->sexpr (cdr set/cons)))))
+                                          (cons (serialize (car set/cons))
+                                                (serialize (cdr set/cons)))))
                                       esets)))
    fp)
 

@@ -1,7 +1,8 @@
 #lang scheme
 
 (require scheme/match
-         "../../ast/predexpr.scm")
+         "../../ast/predexpr.scm"
+         "../../untyped-utils.scm")
 
 ;                                                                                             
 ;                                                                                             
@@ -249,7 +250,7 @@
 (define eval-predicate 
   (case-lambda
     [(expr state1 state2 . states)
-     (eval-predicate sexpr (apply dict-merge state1 state2 states))]
+     (eval-predicate expr (apply dict-merge state1 state2 states))]
     [(expr state)
      (eval-ast expr state)]))
 ;
