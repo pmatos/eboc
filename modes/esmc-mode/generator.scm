@@ -1,6 +1,10 @@
 #lang scheme/base
 
 (require scheme/match
+         scheme/file
+         scheme/list
+         scheme/pretty
+         scheme/serialize
          "../../ast.scm"
          "../../utils.scm")
 
