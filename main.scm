@@ -17,9 +17,9 @@
 ;(current-command-line-arguments (vector "-v" "-m" "latex" "casestudies/counter.mch"))
 ;(current-command-line-arguments (vector "-v" "-m" "latex" "casestudies/john/regs/regs.mch"))
 
-;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-;                                        "-o" "file=../casestudies/eboc/counter.mch"
-;                                        "-o" "bound=100"))
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/counter.mch"
+                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/ndetinit.mch"
@@ -33,10 +33,10 @@
 ;                                        "-o" "file=../casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=../casestudies/eboc/john/regs/regs.mch"
-                                        "-o" "setbound=10"
-                                        "-o" "bound=3"))
+;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+;                                        "-o" "file=../casestudies/eboc/john/regs/regs.mch"
+;                                        "-o" "setbound=10"
+;                                        "-o" "bound=3"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/infinite.mch"

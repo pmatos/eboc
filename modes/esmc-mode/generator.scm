@@ -103,7 +103,7 @@ The procedures generated are:
         [action-name (event-action-proc-name name)])
     (pretty-print `(define (,guard-name state)
                      ;(printf "~nGenerating deterministic guard for ~a with state ~a~n." ',guard-name state)
-                     (let ([enabled? (eval-predicate ',(serialize guard 'eb-) state)]
+                     (let ([enabled? (eval-predicate ',(serialize (strip-types guard)) state)]
                            [done? #f])
                        (lambda (msg)
                          ;(printf "~n~nPassing msg ~a to guard ~a in state ~a.~n" msg ',guard-name state)
@@ -141,8 +141,7 @@ The procedures generated are:
                                                                                                   guard 
                                                                                                   (foldl (lambda (a acum) (make-Predicate-BinOp 'land acum a))
                                                                                                          (first axioms)
-                                                                                                         (rest axioms))))
-                                                                        'eb-) 
+                                                                                                         (rest axioms))))) 
                                                     state local-state)
                                     (,action-name state local-state)
                                     #f)

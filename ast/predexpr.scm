@@ -763,6 +763,43 @@
 (define Variable-name Identifier-name)
     
 
+;                                                                               
+;                                                                               
+;                                                                               
+;                          ;                                                    
+;                                                                               
+;           ;                                  ;                                
+;    ;;;   ;;;;   ; ;;;   ;;    ;;;;          ;;;;   ;   ;  ;;;;    ;;;    ;;;  
+;   ;       ;     ;;       ;    ;   ;  ;;;;;   ;     ;   ;  ;   ;  ;   ;  ;     
+;    ;;     ;     ;        ;    ;   ;          ;      ; ;   ;   ;  ;;;;;   ;;   
+;      ;;   ;     ;        ;    ;   ;          ;      ; ;   ;   ;  ;         ;; 
+;       ;   ;     ;        ;    ;   ;          ;       ;    ;   ;  ;          ; 
+;   ;;;;     ;;;  ;      ;;;;   ;;;;            ;;;    ;    ;;;;    ;;;   ;;;;  
+;                               ;                      ;    ;                   
+;                               ;                    ;;     ;                   
+;                                                                               
+
+;; Given an expression or a predicate, returns the same expression/predicate
+;; but without any typing information
+(provide strip-types)
+
+(define (strip-types expr/pred)
+  (letrec ([strip-types/pred 
+            (lambda (pred)
+              (match pred
+                ((struct Predicate-Literal _) pred)
+                
+                         )]
+           [strip-types/expr
+            (match-lambda 
+              
+              )])
+    (if (predicate? expr/pred)
+        (strip-types/pred expr/pred)
+        (strip-types/expr expr/pred))))
+                     
+                     
+
 ;                                                                 
 ;                                                                 
 ;                                                                 
