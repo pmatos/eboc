@@ -787,18 +787,71 @@
   (letrec ([strip-types/pred 
             (lambda (pred)
               (match pred
-                ((struct Predicate-Literal _) pred)
-                
-                         )]
+                [(struct Predicate-Literal _) pred]
+                [(struct Predicate-UnOp (op arg))
+                 (make-Predicate-UnOp op (strip-types/pred arg))]
+                [(struct Predicate-BinOp (op arg1 arg2))
+                 (make-Predicate-BinOp op 
+                                       (strip-types/pred arg1) 
+                                       (strip-types/pred arg2))]
+                [(struct Predicate-RelOp (op arg1 arg2))
+                 (make-Predicate-RelOp op
+                                       (strip-types/expr arg1)
+                                       (strip-types/expr arg2))]
+                [(struct Quantifier (quant var body))
+                 (make-Quantifier quant
+                                  (strip-types/expr var)
+                                  (strip-types/pred body))]
+                [(struct Predicate-Finite (expr))
+                 (make-Predicate-Finite (strip-types/expr expr))]
+                [(struct Predicate-Partition (args))
+                 (make-Predicate-Partition (map strip-types/expr args))]
+                [_
+                 (error 'strip-types/pred
+                        "Can't match predicate structure" pred)]))]
+            
            [strip-types/expr
-            (match-lambda 
-              
-              )])
+            (lambda (expr)
+              (match expr
+                [(struct Expr/wt (type expr))
+                 (strip-type/expr expr)]
+                [(or (struct Expression-Literal _)
+                     (struct Integer-Literal _)
+                     (struct Variable _) 
+                     (struct Set-Literal _)
+                     (struct Set _)
+                     (struct Constant _)
+                     (struct Identifier _))
+                 expr]
+                [(struct Expression-Bool (pred))
+                 (make-Expression-Bool (strip-types/pred pred))]
+                [(struct Expression-UnOp (op arg))
+                 (make-Expression-UnOp op (strip-types/expr arg))]
+                [(struct Expression-BinOp (op arg1 arg2))
+                 (make-Expression-BinOp op 
+                                        (strip-types/expr arg1)
+                                        (strip-types/expr arg2))]
+                [(struct Lambda-Expression (idpat pred expr))
+                 (make-Lambda-Expression (strip-types/expr idpat)
+                                         (strip-types/pred pred)
+                                         (strip-types/expr expr expr))]
+                [(struct Set-Comprehension (compop vars pred expr))
+                 (make-Set-Comprehension compop
+                                         (strip-types/expr vars)
+                                         (strip-types/pred pred)
+                                         (strip-types/expr expr))]
+                [(struct Set-Enumeration (exprs))
+                 (make-Set-Enumeration (map strip-types/expr exprs))]
+                [(struct Variable-Pair (car cdr))
+                 (make-Variable-Pair (strip-types/expr car)
+                                     (strip-types/expr cdr))]
+                [_
+                 (error 'strip-types/expr
+                        "Can't match expression structure" expr)]))])
+                  
     (if (predicate? expr/pred)
         (strip-types/pred expr/pred)
         (strip-types/expr expr/pred))))
-                     
-                     
 
 ;                                                                 
 ;                                                                 
