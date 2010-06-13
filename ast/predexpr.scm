@@ -814,7 +814,7 @@
             (lambda (expr)
               (match expr
                 [(struct Expr/wt (type expr))
-                 (strip-type/expr expr)]
+                 (strip-types/expr expr)]
                 [(or (struct Expression-Literal _)
                      (struct Integer-Literal _)
                      (struct Variable _) 
