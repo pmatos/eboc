@@ -7,3 +7,5 @@
          (cons (deserialize  (car p))
                (deserialize (cdr p))))
        assl))
+
+(provide deserialize-assoc)
