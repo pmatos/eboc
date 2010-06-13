@@ -21,7 +21,7 @@
 ;; setbound - number of elements to add to deferred sets 
 (define (esmc-mode mode-options)
   (let* ([requires (map (lambda (filename) 
-                          `(require (planet ,(string-append "modes/esmc-mode/" filename) ("pjmatos" "eboc.plt" 1 0))))
+                          `(require scheme/serialize (planet ,(string-append "modes/esmc-mode/" filename) ("pjmatos" "eboc.plt" 1 0))))
                         '("eventb-lib.scm" "scheduler.scm" "search-sig.scm" "value-generator.scm" "probabilities.scm"))]
          [file (cdr (assoc 'file mode-options))]
          [setbound (if (assoc 'setbound mode-options) (string->number (cdr (assoc 'setbound mode-options))) #f)]
