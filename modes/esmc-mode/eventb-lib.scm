@@ -271,27 +271,6 @@
 
 
 (define (print-state state (out (current-output-port)))
-  (letrec ([print-value
-            (lambda (val (out (current-output-port)))
-              (cond [(or (integer? val) (symbol? val)) (fprintf out "~a" val)]
-                    [(pair? val) 
-                     (print-value (car val) out)
-                     (fprintf out " |-> ")
-                     (print-value (cdr val) out)]
-                    [(set:set? val)
-                     (fprintf out "{~a}"
-                              (apply string-append 
-                                     (add-between (map (lambda (v)
-                                                         (let ([o (open-output-string)])
-                                                           (print-value v o)
-                                                           (get-output-string o)))
-                                                       (set:elements val))
-                                                  ", ")))]
-                    [else
-                     (error 'print-state "Can't print value of state: " val)]))])
     (parameterize ([current-output-port out])
-      (for-each (match-lambda ((cons var val) 
-                               (printf "~a : " var)
-                               (print-value val out)
-                               (newline out)))
-                state))))
+      (for-each (match-lambda ((cons var val) (printf "~a : ~a" var val)))
+                state)))
