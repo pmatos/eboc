@@ -211,7 +211,8 @@
                                  (Integer-Literal-val arg2)))]
     
     [_
-     (error "No rules match to evaluate: ~a on state ~a" ast state)]))
+     (error 'eval-ast 
+            "No rules match to evaluate: ~a on state ~a" ast state)]))
 
 
 ;                              
