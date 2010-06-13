@@ -24,7 +24,21 @@
 
 (define (eval-ast ast state)
   
+  (printf "eval-ast: ~a on ~a~n" ast state)
+  
   (match ast
+    
+    ;; Evaluation of Literal Expressions
+    [(struct Integer-Literal (val)) ast]
+    
+    [(struct Variable _)
+     (let ([binding (assf (lambda (arg) (variable=? ast arg)) state)])
+       (if binding
+           (cdr binding)
+           (error 'eval-ast/Variable
+                  "No binding for variable ~a in state ~a."
+                  ast 
+                  state)))]
     
     ;; Evaluation of Unary Expressions
    
@@ -210,6 +224,94 @@
      (make-Integer-Literal (expt (Integer-Literal-val arg1)
                                  (Integer-Literal-val arg2)))]
     
+    
+;                                     
+;                                     
+;                                     
+;                            ;        
+;                            ;        
+;                            ;        
+;   ;;;;   ; ;;;   ;;;    ;;;;   ;;;  
+;   ;   ;  ;;     ;   ;  ;   ;  ;     
+;   ;   ;  ;      ;;;;;  ;   ;   ;;   
+;   ;   ;  ;      ;      ;   ;     ;; 
+;   ;   ;  ;      ;      ;  ;;      ; 
+;   ;;;;   ;       ;;;    ;;;;  ;;;;  
+;   ;                                 
+;   ;                                 
+;                                     
+
+    [(struct Predicate-Literal (lit)) ast]
+    
+    [(struct Predicate-UnOp ('not arg))
+     
+     (match (eval-ast arg state)
+       
+       [(struct Predicate-Literal (lit))
+        (if (eqv? lit 'bfalse)
+            (make-Predicate-Literal 'btrue)
+            (make-Predicate-Literal 'bfalse))]
+       
+       [_
+        (error 'eval-ast/Predicate-UnOp/not 
+               "Unexpected arg")])]
+    
+    [(struct Predicate-BinOp (op arg1 arg2))
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (case op
+         [(land) 
+          (match (cons earg1 earg2)
+            [(cons (struct Predicate-Literal ('btrue))
+                   (struct Predicate-Literal ('btrue)))
+             earg1]
+            [_ (make-Predicate-Literal ('bfalse))])]
+
+         [(lor) 
+          (match (cons earg1 earg2)
+            [(cons (struct Predicate-Literal ('bfalse))
+                   (struct Predicate-Literal ('bfalse)))
+             earg1]
+            [_ (make-Predicate-Literal ('btrue))])]
+         
+         [(limp) 
+          (match (cons earg1 earg2)
+            [(cons (struct Predicate-Literal ('btrue))
+                   (struct Predicate-Literal ('bfalse)))
+             earg2]
+            [_ (make-Predicate-Literal ('btrue))])]
+         
+         [(leqv) 
+          (match (list earg1 earg2)
+            [(list-no-order (struct Predicate-Literal ('bfalse))
+                            (struct Predicate-Literal ('btrue)))
+             (make-Predicate-Literal ('bfalse))]
+            [_ (make-Predicate-Literal ('btrue))])]))]
+             
+    
+    [(struct Predicate-RelOp (op arg1 arg2))
+     
+     (let* ([earg1 (eval-ast arg1 state)]
+            [earg2 (eval-ast arg2 state)])
+       
+       (if (Integer-Literal? earg2)
+           (let ([int1 (Integer-Literal-val earg1)]
+                 [int2 (Integer-Literal-val earg2)])
+             (if (or (and (eqv? op 'equal) (= int1 int2))
+                     (and (eqv? op 'notequal) (not (= int1 int2)))
+                     (and (eqv? op 'lt) (< int1 int2))
+                     (and (eqv? op 'le) (<= int1 int2))
+                     (and (eqv? op 'gt) (> int1 int2))
+                     (and (eqv? op 'ge) (>= int1 int2)))
+                 (make-Predicate-Literal 'btrue)
+                 (make-Predicate-Literal 'bfalse)))
+           
+           (error 'eval-ast/Predicate-Rel
+                  "Unimplemented arguments to Predicate RelOp (~a, ~a)"
+                  earg1 earg2)))]
+                
     [_
      (error 'eval-ast 
             "No rules match to evaluate: ~a on state ~a" ast state)]))
@@ -244,16 +346,15 @@
     [(expr state)
      (eval-ast expr state)]))
 
-;; Implements lazy evaluation of predicates for 'and and 'or
-;; - 'and only evaluates its arguments till it finds a false
-;; - 'or only evaluates its arguments till it finds a true
-;; 
 (define eval-predicate 
   (case-lambda
     [(expr state1 state2 . states)
      (eval-predicate expr (apply dict-merge state1 state2 states))]
     [(expr state)
-     (eval-ast expr state)]))
+     (let ([val (eval-ast expr state)])
+       (match val
+         [(struct Predicate-Literal ('btrue)) #t]
+         [_ #f]))]))
 ;
 ;
 ;                                                                                
