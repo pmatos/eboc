@@ -165,9 +165,9 @@ The procedures generated are:
                                                                  (lambda (a) (eval-expression (cdr assign-pair) state local-state))))) 
                                             state
                                             ',(let ([actions (map cons 
-                                                                  (append (map (compose serialize Expr/wt-expr) (Assign-Action-lhs action))
+                                                                  (append (map (compose serialize strip-types) (Assign-Action-lhs action))
                                                                           (map serialize consts))
-                                                                  (append (map (lambda (act) (serialize act 'eb-)) (Assign-Action-rhs action))
+                                                                  (append (map (compose serialize strip-types) (Assign-Action-rhs action))
                                                                           (map serialize consts)))])
                                                 ;(printf "Generated actions for ~a:~nAction: ~a~nExpr: ~a~n" name action actions) 
                                                 actions))])
@@ -179,7 +179,7 @@ The procedures generated are:
   (let ([prop-name (prop-proc-name name)])
     (pretty-print `(define (,prop-name state)
                      ;(printf "Checking property ~a on state ~a.~n" ',prop-name state)
-                     (eval-predicate ',(serialize prop 'eb-) state))
+                     (eval-predicate (deserialize ',(serialize (strip-types prop))) state))
                   fp)))
 
 ;; inits should be a list of at most 2 elements: an Assign-Action and Suchthat-Assign-Action
