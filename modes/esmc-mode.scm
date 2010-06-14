@@ -24,7 +24,7 @@
                           `(require scheme/serialize 
                                     (planet ,(string-append "modes/esmc-mode/" filename) 
                                             ("pjmatos" "eboc.plt" 1 0))))
-                        '("serialize-utils.scm" "eventb-lib.scm" "scheduler.scm" "search-sig.scm" "value-generator.scm" "probabilities.scm"))]
+                        '("state.scm" "serialize-utils.scm" "eventb-lib.scm" "scheduler.scm" "search-sig.scm" "value-generator.scm" "probabilities.scm"))]
          [file (cdr (assoc 'file mode-options))]
          [setbound (if (assoc 'setbound mode-options) (string->number (cdr (assoc 'setbound mode-options))) #f)]
          [ast (parameterize ([working-directory (build-path (working-directory) (path-only file))])

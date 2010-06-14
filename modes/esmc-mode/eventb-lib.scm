@@ -24,8 +24,6 @@
 
 (define (eval-ast ast state)
   
-  (printf "eval-ast: ~a on ~a~n" ast state)
-  
   (match ast
     
     ;; Evaluation of Literal Expressions
@@ -194,35 +192,39 @@
                                (Integer-Literal-val arg1)))
                        (lambda (x) (+ x (Integer-Literal-val arg1))))))]
     
-    ; plus: INT x INT -> INT
-    [(struct Expression-BinOp ('plus arg1 arg2))
-     (make-Integer-Literal (+ (Integer-Literal-val arg1)
-                              (Integer-Literal-val arg2)))]
+    [(struct Expression-BinOp ((or 'plus 'minus 'mul 'div 'mod 'expn) arg1 arg2))
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (case (Expression-BinOp-op ast)
+         [(plus) ; plus: INT x INT -> INT
+          (make-Integer-Literal (+ (Integer-Literal-val earg1)
+                                   (Integer-Literal-val earg2)))]
+         
     
-    ; minus: INT x INT -> INT
-    [(struct Expression-BinOp ('minus arg1 arg2))
-     (make-Integer-Literal (- (Integer-Literal-val arg1)
-                              (Integer-Literal-val arg2)))]
+         [(minus) ; minus: INT x INT -> INT   
+          (make-Integer-Literal (- (Integer-Literal-val earg1)
+                                   (Integer-Literal-val earg2)))]
     
-    ; mul: INT x INT -> INT
-    [(struct Expression-BinOp ('mul arg1 arg2))
-     (make-Integer-Literal (* (Integer-Literal-val arg1)
-                              (Integer-Literal-val arg2)))]
+         [(mul); mul: INT x INT -> INT
+          (make-Integer-Literal (* (Integer-Literal-val earg1)
+                                   (Integer-Literal-val earg2)))]
     
-    ; div: INT x INT -> INT
-    [(struct Expression-BinOp ('div arg1 arg2))
-     (make-Integer-Literal (quotient (Integer-Literal-val arg1)
-                                     (Integer-Literal-val arg2)))]
+         [(div) ; div: INT x INT -> INT
+          (make-Integer-Literal (quotient (Integer-Literal-val earg1)
+                                          (Integer-Literal-val earg2)))]
     
-    ; mod: INT x INT -> INT
-    [(struct Expression-BinOp ('mod arg1 arg2))
-     (make-Integer-Literal (modulo (Integer-Literal-val arg1)
-                                   (Integer-Literal-val arg2)))]
+         [(mod) ; mod: INT x INT -> INT
+          (make-Integer-Literal (modulo (Integer-Literal-val earg1)
+                                        (Integer-Literal-val earg2)))]
     
-    ; expn: INT x INT -> INT
-    [(struct Expression-BinOp ('expn arg1 arg2))
-     (make-Integer-Literal (expt (Integer-Literal-val arg1)
-                                 (Integer-Literal-val arg2)))]
+         [(expn) ; expn: INT x INT -> INT
+          (make-Integer-Literal (expt (Integer-Literal-val earg1)
+                                      (Integer-Literal-val earg2)))]
+         
+         [else 
+          (error "Unreachable")]))]
     
     
 ;                                     
@@ -244,7 +246,7 @@
     [(struct Predicate-Literal (lit)) ast]
     
     [(struct Predicate-UnOp ('not arg))
-     
+
      (match (eval-ast arg state)
        
        [(struct Predicate-Literal (lit))
@@ -274,7 +276,7 @@
             [(cons (struct Predicate-Literal ('bfalse))
                    (struct Predicate-Literal ('bfalse)))
              earg1]
-            [_ (make-Predicate-Literal ('btrue))])]
+            [_ (make-Predicate-Literal 'btrue)])]
          
          [(limp) 
           (match (cons earg1 earg2)

@@ -168,10 +168,10 @@ The procedures generated are:
     (pretty-print `(define (,action-name state local-state)
                      (let ([newstate (foldl (lambda (assign-pair acum)
                                               ,(if init?
-                                                   '(dict-set acum (car assign-pair) (eval-expression (cdr assign-pair) state local-state))
-                                                   '(dict-update acum 
+                                                   '(state-set acum (car assign-pair) (eval-expression (cdr assign-pair) state local-state))
+                                                   '(state-update acum 
                                                                  (car assign-pair)  
-                                                                 (lambda (a) (eval-expression (cdr assign-pair) state local-state))))) 
+                                                                 (eval-expression (cdr assign-pair) state local-state))))
                                             state
                                             (deserialize-assoc
                                              ',(let ([actions (map cons 
