@@ -1,42 +1,43 @@
 #lang scheme
 
-(require "enumerations.scm"
+(require "../../types.scm"
+         "enumerations.scm"
          "probabilities.scm")
 
 ;; This module builds on value enumerations to enumerate values of any eventb type in sequence.
 ;; For example: POW(Z), POW(B * Z), a, POW(a * Z) , etc where a is an enumerated set.
 (define (type-enumeration t)
   (match t
-    ('INT int-enumeration)
-    ('BOOL (gen-finite-enumeration '(true false)))
-    ((list (? symbol?) ': els) (gen-finite-enumeration els))
-    (`(,subtype1 x ,subtype2)
+    [(struct Type-Integer ()) int-enumeration]
+    [(struct Type-Boolean ()) (gen-finite-enumeration '(true false))]
+    [(struct Type-Enumeration (_ els)) (gen-finite-enumeration els)]
+    [(struct Type-CartesianProduct (subtype1 subtype2))
      (let ([tenum1 (type-enumeration subtype1)]
            [tenum2 (type-enumeration subtype2)]
            [penum (gen-pair-enumeration (type-cardinality subtype1) (type-cardinality subtype2))])
        (lambda (n)
          (match-let ([(cons n1 n2) (penum n)])
-           (cons (tenum1 n1) (tenum2 n2))))))
-    (`(POW ,subtype)
+           (cons (tenum1 n1) (tenum2 n2)))))]
+    [(struct Type-Powerset (subtype))
      (let ([tenum (type-enumeration subtype)])
        (lambda (n)
-         (map tenum (set-enumeration n)))))))
+         (map tenum (set-enumeration n))))]))
 
 (define (type-cardinality t)
   (match t
-    ('INT +inf.0)
-    ('BOOL 2)
-    ((list (? symbol?) ': els) (length els))
-    (`(,subtype1 x ,subtype2)
-     (* (type-cardinality subtype1) (type-cardinality subtype2)))
-    (`(POW ,subtype)
-     (expt 2 (type-cardinality subtype)))))
+    [(struct Type-Integer ()) +inf.0]
+    [(struct Type-Boolean ()) 2]
+    [(struct Type-Enumeration (_ els)) (length els)]
+    [(struct Type-CartesianProduct (subtype1 subtype2))
+     (* (type-cardinality subtype1) (type-cardinality subtype2))]
+    [(struct Type-Powerset (subtype))
+     (expt 2 (type-cardinality subtype))]))
 
 (define (type-enumeration/prt t)
   (match t
-    ('BOOL (lambda (n) 1.0))
-    ((list (? symbol?) ': els) (lambda (n) 1.0))
-    (else prob)))
+    [(struct Type-Boolean ()) (lambda (n) 1.0)]
+    [(struct Type-Enumeration (_ _)) (lambda (n) 1.0)]
+    [else prob]))
 
 (define (type-list-enumerator types)
   (let* ([type-enumerations (map type-enumeration types)]
