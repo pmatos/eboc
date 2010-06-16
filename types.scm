@@ -1,6 +1,9 @@
-#lang scheme
+#lang scheme/base
 
 (require scheme/match
+         scheme/serialize
+         scheme/list
+         scheme/contract
          (only-in srfi/1 every cons*)
          "params.scm"
          "utils.scm"
@@ -29,7 +32,7 @@
 ;; Event-B types
 ;; This module contains definitions for creating Event-B types.
 
-(define-struct Type-Powerset
+(define-serializable-struct Type-Powerset
   (subtype)
   #:guard 
   (lambda (subtype type-name)
@@ -40,7 +43,7 @@
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-struct Type-CartesianProduct
+(define-serializable-struct Type-CartesianProduct
   (subtype1 
    subtype2)
   #:guard
@@ -52,19 +55,19 @@
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-struct  Type-Integer
+(define-serializable-struct  Type-Integer
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-struct Type-Boolean
+(define-serializable-struct Type-Boolean
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-struct Type-Polymorphic
+(define-serializable-struct Type-Polymorphic
   (name)
   #:guard
   (lambda (name type-name)
@@ -81,7 +84,7 @@
 (define (make-fresh-type-variable-name)
   (gensym 'typevar:))
 
-(define-struct Type-UndefEnumeration
+(define-serializable-struct Type-UndefEnumeration
   (name)
   #:guard
   (lambda (name type-name)
@@ -92,7 +95,7 @@
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-struct (Type-Enumeration Type-UndefEnumeration)
+(define-serializable-struct (Type-Enumeration Type-UndefEnumeration)
   (enum)
   #:property prop:custom-write
   (lambda (struct port write?)
