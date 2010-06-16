@@ -144,13 +144,14 @@ The procedures generated are:
                               (begin0
                                 (if (eval-predicate (deserialize 
                                                      ',(serialize 
-                                                        (if (null? axioms)
-                                                            guard
-                                                            (make-Predicate-BinOp 'land 
-                                                                                  guard 
-                                                                                  (foldl (lambda (a acum) (make-Predicate-BinOp 'land acum a))
-                                                                                         (first axioms)
-                                                                                         (rest axioms)))))) 
+                                                        (strip-types
+                                                         (if (null? axioms)
+                                                             guard
+                                                             (make-Predicate-BinOp 'land 
+                                                                                   guard 
+                                                                                   (foldl (lambda (a acum) (make-Predicate-BinOp 'land acum a))
+                                                                                          (first axioms)
+                                                                                          (rest axioms)))))))
                                                     state local-state)
                                     (,action-name state local-state)
                                     #f)
