@@ -357,6 +357,19 @@
        (match val
          [(struct Predicate-Literal ('btrue)) #t]
          [_ #f]))]))
+
+;;Transforms a list returned by a type enumerator into 
+;; structures understandable by the eventb lib that can be evaluated.
+(provide to-eb-values)
+(define (to-eb-values lst)
+  (map (lambda (elt)
+         (cond [(number? elt) (make-Integer-Literal elt)]
+               [(symbol? elt) (make-Variable elt)]
+               [(list? elt)
+                (make-Set-Enumeration (map to-eb-values elt))]
+               [else (error 'to-eb-values "unexpected value in list: ~a" elt)]))
+       lst))
+
 ;
 ;
 ;                                                                                
