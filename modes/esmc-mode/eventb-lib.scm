@@ -2,6 +2,7 @@
 
 (require scheme/match
          "../../ast/predexpr.scm"
+         "state.scm"
          "../../untyped-utils.scm")
 
 ;                                                                                             
@@ -24,28 +25,32 @@
 
 (define (eval-ast ast state)
   
+  (printf "eval-ast ~a ~a~n" ast state)
+  
   (match ast
     
     ;; Evaluation of Literal Expressions
     [(struct Integer-Literal (val)) ast]
     
     [(struct Variable _)
-     (let ([binding (assf (lambda (arg) (variable=? ast arg)) state)])
+     (let ([binding (state-ref state ast)])
        (if binding
-           (cdr binding)
+           binding
            (error 'eval-ast/Variable
                   "No binding for variable ~a in state ~a."
                   ast 
                   state)))]
     
     [(struct Constant _)
-     (let ([binding (assf (lambda (arg) (constant=? ast arg)) state)])
+     (let ([binding (state-ref state ast)])
        (if binding
-           (cdr binding)
+           binding
            (error 'eval-ast/Constant
                   "No binding for variable ~a in state ~a."
                   ast
                   state)))]
+    
+    [(struct Expression-Literal _) ast]
     
     ;; Evaluation of Unary Expressions
    
@@ -278,7 +283,7 @@
             [(cons (struct Predicate-Literal ('btrue))
                    (struct Predicate-Literal ('btrue)))
              earg1]
-            [_ (make-Predicate-Literal ('bfalse))])]
+            [_ (make-Predicate-Literal 'bfalse)])]
 
          [(lor) 
           (match (cons earg1 earg2)
@@ -292,14 +297,14 @@
             [(cons (struct Predicate-Literal ('btrue))
                    (struct Predicate-Literal ('bfalse)))
              earg2]
-            [_ (make-Predicate-Literal ('btrue))])]
+            [_ (make-Predicate-Literal 'btrue)])]
          
          [(leqv) 
           (match (list earg1 earg2)
             [(list-no-order (struct Predicate-Literal ('bfalse))
                             (struct Predicate-Literal ('btrue)))
-             (make-Predicate-Literal ('bfalse))]
-            [_ (make-Predicate-Literal ('btrue))])]))]
+             (make-Predicate-Literal 'bfalse)]
+            [_ (make-Predicate-Literal 'btrue)])]))]
              
     
     [(struct Predicate-RelOp (op arg1 arg2))
@@ -360,7 +365,7 @@
 (define eval-predicate 
   (case-lambda
     [(expr state1 state2 . states)
-     (eval-predicate expr (apply dict-merge state1 state2 states))]
+     (eval-predicate expr (apply state-merge state1 state2 states))]
     [(expr state)
      (let ([val (eval-ast expr state)])
        (match val
