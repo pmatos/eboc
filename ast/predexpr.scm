@@ -658,7 +658,7 @@
 (define (pp-Constant struct (port (current-output-port)))
   (fprintf port "~a" 
            (if (print-debug?)
-               (symbol-append 'const: (Set-name struct))
+               (symbol-append 'const: (Constant-name struct))
                (Set-name struct))))
 
 (define Constant-name Identifier-name)
