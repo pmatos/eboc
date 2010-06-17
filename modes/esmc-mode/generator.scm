@@ -177,9 +177,9 @@ The procedures generated are:
                                             (deserialize-assoc
                                              ',(let ([actions (map cons 
                                                                    (append (map (compose serialize strip-types) (Assign-Action-lhs action))
-                                                                           (map serialize consts))
+                                                                           (map (compose serialize strip-types) consts))
                                                                    (append (map (compose serialize strip-types) (Assign-Action-rhs action))
-                                                                           (map serialize consts)))])
+                                                                           (map (compose serialize strip-types) consts)))])
                                                  ;(printf "Generated actions for ~a:~nAction: ~a~nExpr: ~a~n" name action actions) 
                                                  actions)))])
                        ;(printf "Execution action ~a with state ~a and local state ~a resulting in state ~a.~n" ',action-name state local-state newstate)
