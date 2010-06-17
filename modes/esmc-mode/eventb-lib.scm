@@ -38,6 +38,15 @@
                   ast 
                   state)))]
     
+    [(struct Constant _)
+     (let ([binding (assf (lambda (arg) (constant=? ast arg)) state)])
+       (if binding
+           (cdr binding)
+           (error 'eval-ast/Constant
+                  "No binding for variable ~a in state ~a."
+                  ast
+                  state)))]
+    
     ;; Evaluation of Unary Expressions
    
     ; converse: POW(a x b) -> POW(b x a)
