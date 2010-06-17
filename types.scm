@@ -104,6 +104,8 @@
 
 ;; Pretty Printing
 (define (pp-type type (port (current-output-port)))
+  (when print-debug?
+    (fprintf port "Type["))
   (match type
     ((struct Type-Integer ())
      (print-table-constant type-op-table 'Z port))
@@ -131,7 +133,9 @@
      (print-table-constant type-op-table 'x port)
      (fprintf port " ")
      (pp-type s2 port)
-     (fprintf port ")"))))
+     (fprintf port ")")))
+  (when print-debug?
+    (fprintf port "]")))
 
 ;; Testing for types
 (define (type? u)
