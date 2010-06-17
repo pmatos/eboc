@@ -21,13 +21,13 @@
 ;                                        "-o" "file=./casestudies/eboc/counter.mch"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/ndetinit.mch"
-                                        "-o" "bound=100"))
-
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-;                                        "-o" "file=../casestudies/eboc/consts.mch"
+;                                        "-o" "file=./casestudies/eboc/ndetinit.mch"
 ;                                        "-o" "bound=100"))
+
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/consts.mch"
+                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
