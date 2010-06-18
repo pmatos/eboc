@@ -25,8 +25,6 @@
 
 (define (eval-ast ast state)
   
-  (printf "eval-ast ~a ~a~n" ast state)
-  
   (match ast
     
     ;; Evaluation of Literal Expressions
@@ -50,7 +48,15 @@
                   ast
                   state)))]
     
+    [(struct Set-Literal _) ast]
+    
     [(struct Expression-Literal _) ast]
+    
+    ;; Set Enumeration
+    [(struct Set-Enumeration (exprs))
+     (make-Set-Enumeration (map (lambda (expr) 
+                                  (eval-ast expr state))
+                                exprs))]
     
     ;; Evaluation of Unary Expressions
    
@@ -306,6 +312,11 @@
              (make-Predicate-Literal 'bfalse)]
             [_ (make-Predicate-Literal 'btrue)])]))]
              
+    [(struct Predicate-RelOp ('notequal arg1 arg2))
+     (eval-ast (make-Predicate-UnOp 'not (make-Predicate-RelOp 'equal arg1 arg2)) state)]
+    
+    [(struct Predicate-RelOp ('notin arg1 arg2))
+     (eval-ast (make-Predicate-UnOp 'not (make-Predicate-RelOp 'in arg1 arg2)) state)]
     
     [(struct Predicate-RelOp (op arg1 arg2))
      
@@ -313,10 +324,9 @@
             [earg2 (eval-ast arg2 state)])
        
        (if (Integer-Literal? earg2)
-           (let ([int1 (Integer-Literal-val earg1)]
-                 [int2 (Integer-Literal-val earg2)])
+           (let* ([int1 (Integer-Literal-val earg1)]
+                  [int2 (Integer-Literal-val earg2)])
              (if (or (and (eqv? op 'equal) (= int1 int2))
-                     (and (eqv? op 'notequal) (not (= int1 int2)))
                      (and (eqv? op 'lt) (< int1 int2))
                      (and (eqv? op 'le) (<= int1 int2))
                      (and (eqv? op 'gt) (> int1 int2))
@@ -324,9 +334,34 @@
                  (make-Predicate-Literal 'btrue)
                  (make-Predicate-Literal 'bfalse)))
            
-           (error 'eval-ast/Predicate-Rel
-                  "Unimplemented arguments to Predicate RelOp (~a, ~a)"
-                  earg1 earg2)))]
+           (case op
+             
+             [('equal)
+              (expression/wot= earg1 earg2)]
+             
+             [(in)
+              
+              (match earg2
+                [(struct Expression-Literal ('integer))
+                 (make-Predicate-Literal 'btrue)]
+                
+                [(struct Expression-Literal ('natural))
+                 
+                 (if (>= (Integer-Literal-val earg1) 0)
+                     (make-Predicate-Literal 'btrue)
+                     (make-Predicate-Literal 'bfalse))]
+                
+                [(struct Set-Enumeration (exprs))
+                 (ormap (lambda (x) (expression/wot= earg1 x)) exprs)]
+                
+                [else
+                 (error 'eval-ast/Rel-Op/in
+                        "Received unexpected second argument to in: ~a" earg2)])]
+              
+             [else
+              (error 'eval-ast/Predicate-Rel
+                     "Unimplemented arguments to Predicate RelOp (~a, ~a)"
+                     earg1 earg2)])))]
                 
     [_
      (error 'eval-ast 
