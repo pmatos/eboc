@@ -4,7 +4,7 @@
          scheme/contract
          scheme/match
          scheme/list
-         (only-in srfi/1 every lset-union lset-difference)
+         (only-in srfi/1 find every lset-union lset-difference)
          (only-in srfi/13 string-drop-right)
          "../params.scm"
          "../utils.scm"
@@ -34,7 +34,6 @@
          type->expression
          (struct-out Expression-Literal)
          (struct-out Integer-Literal)
-         (struct-out Expression-Bool)
          (struct-out Lambda-Expression)
          (struct-out Set-Comprehension))
      
@@ -155,8 +154,6 @@
   (pred)
   #:guard 
   (lambda (pred type-name)
-    (unless (predicate? pred) 
-      (error 'Expression-Bool:guard "Expected a predicate, got: ~a" pred))
     (values pred))
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -384,6 +381,64 @@
                      Variable-Pair?)])
     (anyof? preds u)))
 
+(define (expression/wot= e1 e2)
+  (match e1
+    [(struct Expression-Literal (s))
+     (and (Expression-Literal? e2)
+          (eqv? s (Expression-Literal-val e2)))]
+    
+    [(struct Integer-Literal (num))
+     (and (Integer-Literal? e2)
+          (= num (Integer-Literal-val e2)))]
+    
+    [(struct Variable (name))
+     (and (Variable? e2)
+          (eqv? name (Variable-name e2)))]
+    
+    [(struct Set-Literal (name))
+     (and (Set-Literal? e2)
+          (eqv? name (Set-Literal-name e2)))]
+    
+    [(struct Set (name))
+     (and (Set? e2)
+          (eqv? name (Set-name e2)))]
+    
+    [(struct Constant (name))
+     (and (Constant? e2)
+          (eqv? name (Constant-name e2)))]
+    
+    [(struct Identifier (name))
+     (and (Identifier? e2)
+          (eqv? name (Identifier-name e2)))]
+    
+    [(struct Expression-Bool (pred))
+     (and (Expression-Bool? e2)
+          (predicate= pred (Expression-Bool-pred e2)))]
+    
+    [(struct Expression-UnOp (op arg))
+     (and (Expression-UnOp? e2)
+          (eqv? op (Expression-UnOp-op e2))
+          (expression/wot= arg (Expression-UnOp-arg e2)))]
+    
+    [(struct Expression-BinOp (op arg1 arg2))
+     (and (Expression-BinOp? e2)
+          (eqv? op (Expression-UnOp-op e2))
+          (expression/wot= arg1 (Expression-BinOp-arg1 e2))
+          (expression/wot= arg2 (Expression-BinOp-arg2 e2)))]
+    
+    [(struct Set-Enumeration (exprs))
+     (and (Set-Enumeration? e2)
+          (andmap (lambda (expr) (find (lambda (e2-el) (expression/wot= expr e2-el))
+                                       (Set-Enumeration-exprs e2)))
+                  exprs))]
+    
+    [_
+     (error 'expression/wot= 
+            "Unimplemented equality between expressions: ~a, ~a" e1 e2)]))
+             
+             
+  
+
 ;                                                                               
 ;                                                                               
 ;              ;                         ;       ;;    ;                        
@@ -484,6 +539,43 @@
 
 (define (predicate? u)
   (anyof? (list Predicate-Literal? Predicate-UnOp? Predicate-BinOp? Predicate-RelOp? Quantifier? Predicate-Finite? Predicate-Partition?) u))
+
+(define (predicate= p1 p2)
+  (match p1
+    [(struct Predicate-Literal (lit))
+     (and (Predicate-Literal? p2)
+          (eqv? lit (Predicate-Literal-lit p2)))]
+    
+    [(struct Predicate-UnOp (op arg))
+     (and (Predicate-UnOp? p2)
+          (eqv? op (Predicate-UnOp-op p2))
+          (predicate= arg (Predicate-UnOp-arg p2)))]
+    
+    [(struct Predicate-BinOp (op arg1 arg2))
+     (and (Predicate-BinOp? p2)
+          (eqv? op (Predicate-BinOp-op p2))
+          (predicate= arg1 (Predicate-BinOp-arg1 p2))
+          (predicate= arg2 (Predicate-BinOp-arg2 p2)))]
+    
+    [(struct Predicate-RelOp (op arg1 arg2))
+     (and (Predicate-RelOp? p2)
+          (eqv? op (Predicate-RelOp-op arg2))
+          (expression/wot= arg1 (Predicate-RelOp-arg1 p2))
+          (expression/wot= arg2 (Predicate-RelOp-arg2 p2)))]
+    
+    [(struct Quantifier (quant var body))
+     (and (Quantifier? p2)
+          (eqv? quant (Quantifier-quant p2))
+          (variable=? var (Quantifier-var p2))
+          (predicate= body (Quantifier-body p2)))]
+    
+    [(struct Predicate-Finite (expr))
+     (and (Predicate-Finite? p2)
+          (expression/wot= expr (Predicate-Finite-expr p2)))]
+    
+    [_
+     (error 'predicate=
+            "Unimplemented equality between predicates ~a, ~a" p1 p2)]))
 
 (define-serializable-struct Predicate-Literal
   (lit)
@@ -881,6 +973,7 @@
  [struct Quantifier ((quant (apply one-of/c (available-ops quantifier-op-table)))
                      (var (or/c Variable? typed-variable?))
                      (body predicate?))]
+ [struct Expression-Bool ((pred predicate?))]
  [struct Expression-UnOp ((op (apply one-of/c (available-ops expression-unop-table)))
                           (arg expression?))]
  [struct Expression-BinOp ((op (apply one-of/c (available-ops expression-binop-table)))
@@ -907,6 +1000,7 @@
  [free-vars/predicate (predicate? . -> . (listof Variable?))]
  [free-vars/expression (expression? . -> . (listof Variable?))]
  [typed-expression? (any/c . -> . boolean?)]
+ [predicate= (predicate? predicate? . -> . boolean?)]
  [typed-predicate? (any/c . -> . boolean?)]
  [typed-variable? (any/c . -> . boolean?)]
  [typed-identifier? (any/c . -> . boolean?)]
@@ -916,6 +1010,7 @@
  [expression? (any/c . -> . boolean?)]
  [type-expression? (any/c . -> . boolean?)]
  [expr/wot? (any/c . -> . boolean?)]
+ [expression/wot= (expr/wot? expr/wot? . -> . boolean?)]
  [identifier/typed=? ((or/c Identifier? typed-identifier?) (or/c Identifier? typed-identifier?) . -> . boolean?)]
  [variable/typed=? ((or/c Variable? typed-variable?) (or/c Variable? typed-variable?) . -> . boolean?)]
  [constant/typed=? ((or/c Constant? typed-constant?) (or/c Constant? typed-constant?) . -> . boolean?)]
