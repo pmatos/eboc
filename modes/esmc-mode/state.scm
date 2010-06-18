@@ -6,7 +6,8 @@
 
 (define (state-lhs? u)
   (or (Variable? u)
-      (Constant? u)))
+      (Constant? u)
+      (Set? u)))
 
 ;; Comparison function for state lhs
 (define (state-lhs= u1 u2)
