@@ -168,7 +168,7 @@
   (let ([p (assoc op (table))])
     (if p
         (proc (cdr p))
-        (error 'table-seek "Can't find operator in operator table."))))
+        (error 'table-seek "Can't find operator ~a in operator table." op))))
 
 (define (op-rep table op)
   (table-seek table op first))
