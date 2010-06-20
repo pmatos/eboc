@@ -27,7 +27,7 @@
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/consts.mch"
-;                                        "-o" "bound=100"))
+;                                        "-o" "bound=10"))
 
 ;(current-command-line-arguments (vector "-v" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
@@ -50,7 +50,7 @@
 (current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
                                         "-o" "file=./casestudies/eboc/jukebox.mch"
                                         "-o" "setbound=2"
-                                        "-o" "bound=100"))
+                                        "-o" "bound=10"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/john/huffman/huffman.mch"

@@ -15,7 +15,23 @@
          (constant=? u1 u2)]
         [(and (Variable? u1) (Variable? u2))
          (variable=? u1 u2)]
+        [(and (Set? u1) (Set? u2))
+         (set=? u1 u2)]
         [else #f]))
+
+(define (state-length s)
+  (length s))
+
+(define (state= s1 s2)
+  (and (= (state-length s1) (state-length s2))
+       (andmap (lambda (s1-binding)
+                 (let* ([s1-lhs (car s1-binding)]
+                        [s1-rhs (cdr s1-binding)]
+                        [s2-rhs (state-ref s2 s1-lhs)])
+                   (if s2-rhs
+                       (expression/wot= s1-rhs s2-rhs)
+                       #f)))
+               s1)))
 
 (define (state? u)
   (and (list? u)
@@ -42,10 +58,17 @@
 (define (state-merge s1 . states)
   (append s1 (apply append states)))
 
+(define (state-print state (out (current-output-port)))
+    (parameterize ([current-output-port out])
+      (for-each (match-lambda ((cons var val) (printf "~a : ~a" var val)))
+                state)))
+
 (provide/contract
  [make-state (-> state?)]
  [state? (any/c . -> . boolean?)]
  [state-ref (state? state-lhs? . -> . (or/c false/c expr/wot?))]
  [state-set (state? state-lhs? expr/wot? . -> . state?)]
  [state-merge ((state?) () #:rest (listof state?) . ->* . state?)]
- [state-update (state? state-lhs? expr/wot? . -> . state?)])
+ [state-update (state? state-lhs? expr/wot? . -> . state?)]
+ [state-print ((state?) (output-port?) . ->* . void?)]
+ [state= (state? state? . -> . boolean?)])

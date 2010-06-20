@@ -1,6 +1,7 @@
 #lang scheme
 
 (require scheme/match
+         (only-in srfi/1 find)
          "../../ast/predexpr.scm"
          "state.scm"
          "../../untyped-utils.scm")
@@ -23,29 +24,23 @@
 ;; Evaluation of predicates and expressions is done case by case
 ;; by matching against the structures that define the AST.
 
-(define (eval-ast ast state)
+(define/contract (eval-ast ast state)
+  ((or/c expr/wot? predicate?) state? . -> . (or/c expr/wot? predicate?))
   
   (match ast
     
     ;; Evaluation of Literal Expressions
     [(struct Integer-Literal (val)) ast]
     
-    [(struct Variable _)
+    [(or (struct Variable _)
+         (struct Constant _)
+         (struct Set _))
      (let ([binding (state-ref state ast)])
        (if binding
            binding
-           (error 'eval-ast/Variable
-                  "No binding for variable ~a in state ~a."
+           (error 'eval-ast/Literal
+                  "No binding for literal ~a in state ~a."
                   ast 
-                  state)))]
-    
-    [(struct Constant _)
-     (let ([binding (state-ref state ast)])
-       (if binding
-           binding
-           (error 'eval-ast/Constant
-                  "No binding for variable ~a in state ~a."
-                  ast
                   state)))]
     
     [(struct Set-Literal _) ast]
@@ -82,7 +77,8 @@
           (error "No rules match to evaluate card of " argv)]))]
     
     [(struct Expression-UnOp ('pow arg))
-     (error "Unimplemented.")]
+     (let ([earg (eval-ast arg state)])
+       (make-Expression-UnOp 'pow earg))]
     
     [(struct Expression-UnOp ('pow1 arg))
      (error "Unimplemented.")]
@@ -318,50 +314,66 @@
     [(struct Predicate-RelOp ('notin arg1 arg2))
      (eval-ast (make-Predicate-UnOp 'not (make-Predicate-RelOp 'in arg1 arg2)) state)]
     
-    [(struct Predicate-RelOp (op arg1 arg2))
+    [(struct Predicate-RelOp ((or 'lt 'le 'gt 'ge) arg1 arg2))
      
-     (let* ([earg1 (eval-ast arg1 state)]
-            [earg2 (eval-ast arg2 state)])
+     (let* ([op (Predicate-RelOp-op ast)]
+            [earg1 (eval-ast arg1 state)]
+            [earg2 (eval-ast arg2 state)]
+            [int1 (Integer-Literal-val earg1)]
+            [int2 (Integer-Literal-val earg2)])
+       (if (or (and (eqv? op 'lt) (< int1 int2))
+               (and (eqv? op 'le) (<= int1 int2))
+               (and (eqv? op 'gt) (> int1 int2))
+               (and (eqv? op 'ge) (>= int1 int2)))
+           (make-Predicate-Literal 'btrue)
+           (make-Predicate-Literal 'bfalse)))]
+    
+    [(struct Predicate-RelOp ('equal arg1 arg2)) 
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
        
-       (if (Integer-Literal? earg2)
-           (let* ([int1 (Integer-Literal-val earg1)]
-                  [int2 (Integer-Literal-val earg2)])
-             (if (or (and (eqv? op 'equal) (= int1 int2))
-                     (and (eqv? op 'lt) (< int1 int2))
-                     (and (eqv? op 'le) (<= int1 int2))
-                     (and (eqv? op 'gt) (> int1 int2))
-                     (and (eqv? op 'ge) (>= int1 int2)))
-                 (make-Predicate-Literal 'btrue)
-                 (make-Predicate-Literal 'bfalse)))
+       (if (expression/wot= earg1 earg2)
+           (make-Predicate-Literal 'btrue)
+           (make-Predicate-Literal 'bfalse)))]
+             
+    [(struct Predicate-RelOp ('in arg1 arg2))
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
            
-           (case op
-             
-             [('equal)
-              (expression/wot= earg1 earg2)]
-             
-             [(in)
-              
-              (match earg2
-                [(struct Expression-Literal ('integer))
-                 (make-Predicate-Literal 'btrue)]
-                
-                [(struct Expression-Literal ('natural))
-                 
-                 (if (>= (Integer-Literal-val earg1) 0)
-                     (make-Predicate-Literal 'btrue)
-                     (make-Predicate-Literal 'bfalse))]
-                
-                [(struct Set-Enumeration (exprs))
-                 (ormap (lambda (x) (expression/wot= earg1 x)) exprs)]
-                
-                [else
-                 (error 'eval-ast/Rel-Op/in
-                        "Received unexpected second argument to in: ~a" earg2)])]
-              
-             [else
-              (error 'eval-ast/Predicate-Rel
-                     "Unimplemented arguments to Predicate RelOp (~a, ~a)"
-                     earg1 earg2)])))]
+       (match (cons earg1 earg2)
+         [(cons _ (struct Expression-Literal ('emptyset)))
+          (make-Predicate-Literal 'bfalse)]
+         
+         [(cons _ (struct Expression-Literal ('integer)))
+          (make-Predicate-Literal 'btrue)]
+         
+         [(cons _ (struct Expression-Literal ('natural)))
+          (if (>= (Integer-Literal-val earg1) 0)
+              (make-Predicate-Literal 'btrue)
+              (make-Predicate-Literal 'bfalse))]
+         
+         [(cons _ (struct Set-Enumeration (exprs)))
+          (if (ormap (lambda (x) (expression/wot= earg1 x)) exprs)
+              (make-Predicate-Literal 'btrue)
+              (make-Predicate-Literal 'bfalse))]
+         
+         [(cons (struct Expression-Literal ('emptyset))
+                (struct Expression-UnOp ('pow _)))
+          (make-Predicate-Literal 'btrue)]
+         
+         [(cons (struct Set-Enumeration (exprs1))
+                (struct Expression-UnOp ('pow (struct Set-Enumeration (exprs2)))))
+          (if (andmap (lambda (expr1)
+                        (find (lambda (expr2) (expression/wot= expr1 expr2))
+                              exprs2))
+                      exprs1)
+              (make-Predicate-Literal 'btrue)
+              (make-Predicate-Literal 'bfalse))]
+         
+         [else
+          (error 'eval-ast/Rel-Op/in
+                 "Received unexpected args to in: ~a, ~a" earg1 earg2)]))]
                 
     [_
      (error 'eval-ast 
@@ -395,6 +407,7 @@
     [(expr state1 state2 . states)
      (eval-expression expr (apply dict-merge state1 state2 states))]
     [(expr state)
+     (printf "eval-expression ~a, state ~a~n~n" expr state)
      (eval-ast expr state)]))
 
 (define eval-predicate 
@@ -402,10 +415,13 @@
     [(expr state1 state2 . states)
      (eval-predicate expr (apply state-merge state1 state2 states))]
     [(expr state)
-     (let ([val (eval-ast expr state)])
-       (match val
-         [(struct Predicate-Literal ('btrue)) #t]
-         [_ #f]))]))
+     (printf "eval-predicate ~a~nstate ~a~n" expr state)
+     (let* ([val (eval-ast expr state)]
+            [result (match val
+                      [(struct Predicate-Literal ('btrue)) #t]
+                      [_ #f])])
+       (printf "=> ~a~n" result)
+       result)]))
 
 ;;Transforms a list returned by a type enumerator into 
 ;; structures understandable by the eventb lib that can be evaluated.
@@ -413,30 +429,8 @@
 (define (to-eb-values lst)
   (map (lambda (elt)
          (cond [(number? elt) (make-Integer-Literal elt)]
-               [(symbol? elt) (make-Variable elt)]
+               [(symbol? elt) (make-Set-Literal elt)]
                [(list? elt)
                 (make-Set-Enumeration (map to-eb-values elt))]
                [else (error 'to-eb-values "unexpected value in list: ~a" elt)]))
        lst))
-
-;
-;
-;                                                                                
-;                                                     ;                          
-;    ;;;;  ;           ;                ;;;;;                    ;               
-;   ;;   ; ;           ;                ;   ;;                   ;               
-;   ;    ;;;;;  ;;;; ;;;;;   ;;;        ;    ; ;;;; ;;;   ;;;; ;;;;;   ;;;   ;;;;
-;    ;;;   ;        ;  ;    ;   ;       ;   ;; ;; ;   ;   ;   ;  ;    ;   ;  ;; ;
-;      ;;; ;     ;;;;  ;    ;;;;;       ;;;;;  ;      ;   ;   ;  ;    ;;;;;  ;   
-;        ; ;    ;   ;  ;    ;           ;      ;      ;   ;   ;  ;    ;      ;   
-;   ;    ; ;    ;  ;;  ;    ;;          ;      ;      ;   ;   ;  ;    ;;     ;   
-;    ;;;;  ;;;   ;;;;  ;;;   ;;;;       ;      ;    ;;;;; ;   ;  ;;;   ;;;;  ;   
-;                                                                                
-;                                                                                
-;                                                                                
-
-
-(define (print-state state (out (current-output-port)))
-    (parameterize ([current-output-port out])
-      (for-each (match-lambda ((cons var val) (printf "~a : ~a" var val)))
-                state)))
