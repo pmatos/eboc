@@ -36,7 +36,7 @@
          (struct-out Integer-Literal)
          (struct-out Lambda-Expression)
          (struct-out Set-Comprehension))
-     
+
 (define e 
   (match-lambda 
     ((? integer? int) 
@@ -72,7 +72,7 @@
      (apply lset-union variable/typed=? (map free-ids/expression exprs)))
     ((struct Variable-Pair (car cdr))
      (lset-union variable/typed=? (free-ids/expression car) (free-ids/expression cdr)))))
-  
+
 (define (free-vars/expression e)
   (filter Variable? (free-ids/expression e)))
 (define (free-consts/expression e)
@@ -115,7 +115,7 @@
      (make-Set-Enumeration (map (lambda (e) (subst-in-expression e subst)) vals)))
     ((struct Variable-Pair (car cdr))
      (make-Variable-Pair (subst-in-expression car subst) (subst-in-expression cdr subst)))))
-    
+
 (define (type->expression type)
   (match type 
     ((struct Type-Integer _)
@@ -170,7 +170,7 @@
 
 (define (pp-Integer-Literal struct (port (current-output-port)))
   (fprintf port "~a" (Integer-Literal-val struct)))
-               
+
 (define-serializable-struct Expression-UnOp
   (op arg)
   #:property prop:custom-write
@@ -382,62 +382,64 @@
     (anyof? preds u)))
 
 (define (expression/wot= e1 e2)
-  (match e1
-    [(struct Expression-Literal (s))
-     (and (Expression-Literal? e2)
-          (eqv? s (Expression-Literal-val e2)))]
-    
-    [(struct Integer-Literal (num))
-     (and (Integer-Literal? e2)
-          (= num (Integer-Literal-val e2)))]
-    
-    [(struct Variable (name))
-     (and (Variable? e2)
-          (eqv? name (Variable-name e2)))]
-    
-    [(struct Set-Literal (name))
-     (and (Set-Literal? e2)
-          (eqv? name (Set-Literal-name e2)))]
-    
-    [(struct Set (name))
-     (and (Set? e2)
-          (eqv? name (Set-name e2)))]
-    
-    [(struct Constant (name))
-     (and (Constant? e2)
-          (eqv? name (Constant-name e2)))]
-    
-    [(struct Identifier (name))
-     (and (Identifier? e2)
-          (eqv? name (Identifier-name e2)))]
-    
-    [(struct Expression-Bool (pred))
-     (and (Expression-Bool? e2)
-          (predicate= pred (Expression-Bool-pred e2)))]
-    
-    [(struct Expression-UnOp (op arg))
-     (and (Expression-UnOp? e2)
-          (eqv? op (Expression-UnOp-op e2))
-          (expression/wot= arg (Expression-UnOp-arg e2)))]
-    
-    [(struct Expression-BinOp (op arg1 arg2))
-     (and (Expression-BinOp? e2)
-          (eqv? op (Expression-UnOp-op e2))
-          (expression/wot= arg1 (Expression-BinOp-arg1 e2))
-          (expression/wot= arg2 (Expression-BinOp-arg2 e2)))]
-    
-    [(struct Set-Enumeration (exprs))
-     (and (Set-Enumeration? e2)
-          (andmap (lambda (expr) (find (lambda (e2-el) (expression/wot= expr e2-el))
-                                       (Set-Enumeration-exprs e2)))
-                  exprs))]
-    
-    [_
-     (error 'expression/wot= 
-            "Unimplemented equality between expressions: ~a, ~a" e1 e2)]))
-             
-             
-  
+  (if
+   (match e1
+     [(struct Expression-Literal (s))
+      (and (Expression-Literal? e2)
+           (eqv? s (Expression-Literal-val e2)))]
+     
+     [(struct Integer-Literal (num))
+      (and (Integer-Literal? e2)
+           (= num (Integer-Literal-val e2)))]
+     
+     [(struct Variable (name))
+      (and (Variable? e2)
+           (eqv? name (Variable-name e2)))]
+     
+     [(struct Set-Literal (name))
+      (and (Set-Literal? e2)
+           (eqv? name (Set-Literal-name e2)))]
+     
+     [(struct Set (name))
+      (and (Set? e2)
+           (eqv? name (Set-name e2)))]
+     
+     [(struct Constant (name))
+      (and (Constant? e2)
+           (eqv? name (Constant-name e2)))]
+     
+     [(struct Identifier (name))
+      (and (Identifier? e2)
+           (eqv? name (Identifier-name e2)))]
+     
+     [(struct Expression-Bool (pred))
+      (and (Expression-Bool? e2)
+           (predicate= pred (Expression-Bool-pred e2)))]
+     
+     [(struct Expression-UnOp (op arg))
+      (and (Expression-UnOp? e2)
+           (eqv? op (Expression-UnOp-op e2))
+           (expression/wot= arg (Expression-UnOp-arg e2)))]
+     
+     [(struct Expression-BinOp (op arg1 arg2))
+      (and (Expression-BinOp? e2)
+           (eqv? op (Expression-UnOp-op e2))
+           (expression/wot= arg1 (Expression-BinOp-arg1 e2))
+           (expression/wot= arg2 (Expression-BinOp-arg2 e2)))]
+     
+     [(struct Set-Enumeration (exprs))
+      (and (Set-Enumeration? e2)
+           (andmap (lambda (expr) (find (lambda (e2-el) (expression/wot= expr e2-el))
+                                        (Set-Enumeration-exprs e2)))
+                   exprs))]
+     
+     [_
+      (error 'expression/wot= 
+             "Unimplemented equality between expressions: ~a, ~a" e1 e2)])
+   #t #f))
+
+
+
 
 ;                                                                               
 ;                                                                               
@@ -598,7 +600,7 @@
      (make-Predicate-RelOp op (subst-in-expression arg1 subst) (subst-in-expression arg2 subst)))
     ((struct Quantifier (quant var body))
      (make-Quantifier quant (subst-in-predicate var subst) (subst-in-predicate body subst)))))
-                         
+
 
 (define-serializable-struct Predicate-UnOp
   (op arg)
@@ -642,7 +644,7 @@
   (op arg1 arg2)
   #:property prop:custom-write
   (lambda (struct port write?)
-      (pp-Predicate-RelOp struct port)))
+    (pp-Predicate-RelOp struct port)))
 
 (define (pp-Predicate-RelOp struct (port (current-output-port)))
   (print-table-operation predicate-relop-table 
@@ -853,7 +855,7 @@
     (variable=? var1 var2)))
 
 (define Variable-name Identifier-name)
-    
+
 
 ;                                                                               
 ;                                                                               
@@ -901,7 +903,7 @@
                 [_
                  (error 'strip-types/pred
                         "Can't match predicate structure" pred)]))]
-            
+           
            [strip-types/expr
             (lambda (expr)
               (match expr
@@ -940,7 +942,7 @@
                 [_
                  (error 'strip-types/expr
                         "Can't match expression structure" expr)]))])
-                  
+    
     (if (predicate? expr/pred)
         (strip-types/pred expr/pred)
         (strip-types/expr expr/pred))))
@@ -1016,4 +1018,3 @@
  [constant/typed=? ((or/c Constant? typed-constant?) (or/c Constant? typed-constant?) . -> . boolean?)]
  [set-literal/typed=? ((or/c Set-Literal? typed-set-literal?) (or/c Set-Literal? typed-set-literal?) . -> . boolean?)]
  [set/typed=? ((or/c Set? typed-set?) (or/c Set? typed-set?) . -> . boolean?)])
- 
