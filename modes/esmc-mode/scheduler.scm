@@ -130,9 +130,9 @@ If after checking n states no property is violated it returns null.
                [else
                 ;;; Print queue status
                 ;; 
-                (let-values ([(els prt) (pq:elements+priorities (search-state-queue (current-search-state)))])                 
-                  (printf "~n~nQueue size: ~a, states checked: ~a~n" (pq:size (search-state-queue (current-search-state))) (search-state-states-checked (current-search-state)))
-                  (printf "Queue: ~a els, prts: ~a~n" (length prt) (map (lambda (x) (- 1.0 x)) prt)))
+                ;(let-values ([(els prt) (pq:elements+priorities (search-state-queue (current-search-state)))])                 
+                ;  (printf "~n~nQueue size: ~a, states checked: ~a~n" (pq:size (search-state-queue (current-search-state))) (search-state-states-checked (current-search-state)))
+                ;  (printf "Queue: ~a els, prts: ~a~n" (length prt) (map (lambda (x) (- 1.0 x)) prt)))
                 
                 
                 (let* ([low-prt-prt (- 1.0 (pq:find-min-priority (search-state-queue (current-search-state))))]
@@ -147,7 +147,7 @@ If after checking n states no property is violated it returns null.
                       
                       (let ([newstate (low-prt-gen 'stt)]
                             [new-prt (low-prt-gen 'prt)])
-                        (printf "~nGot new state ~a with priority ~a.~n" newstate new-prt)
+                        ;(printf "~nGot new state ~a with priority ~a.~n" newstate new-prt)
                         
                         (search-queue-insert! low-prt-el new-prt)
                         
@@ -155,8 +155,8 @@ If after checking n states no property is violated it returns null.
                             (loop violations)
                             (begin 
                               
-                              (printf "Current-state: ~a~n" newstate)
-                              (printf "Current-path: ~a~n" low-prt-path)
+                              ;(printf "Current-state: ~a~n" newstate)
+                              ;(printf "Current-path: ~a~n" low-prt-path)
                               
                               ;; Write to graph
                               (when debug?
@@ -195,14 +195,14 @@ If after checking n states no property is violated it returns null.
                                                       ((cons name guard-proc)
                                                        (let ([generator (guard-proc newstate)])
                                                          (when (not (generator 'empty?))
-                                                           (printf "- ~a enabled~n" name)
-                                                           (printf "~a * ~a * ~a = ~a~n" 
-                                                                   low-prt-prt 
-                                                                   (prob (+ 1.0 (length low-prt-path))) 
-                                                                   (generator 'prt) 
-                                                                   (* low-prt-prt 
-                                                                      (prob (+ 1.0 (length low-prt-path)))
-                                                                      (generator 'prt)))
+                                                           ;(printf "- ~a enabled~n" name)
+                                                           ;(printf "~a * ~a * ~a = ~a~n" 
+                                                           ;        low-prt-prt 
+                                                           ;        (prob (+ 1.0 (length low-prt-path))) 
+                                                           ;        (generator 'prt) 
+                                                           ;        (* low-prt-prt 
+                                                           ;           (prob (+ 1.0 (length low-prt-path)))
+                                                           ;           (generator 'prt)))
                                                            (search-queue-insert! (cons (cons name low-prt-path) generator) 
                                                                                  (* low-prt-prt 
                                                                                     (prob (+ 1.0 (length low-prt-path))) (generator 'prt)))))))
