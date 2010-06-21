@@ -100,22 +100,22 @@
 
      (let ([argv (eval-ast arg state)])
      
-       (match (eval-ast ast state)
+       (match argv
          
          [(struct Set-Enumeration (exprs))
-          (first exprs)]
+          (make-Integer-Literal (apply min (map Integer-Literal-val exprs)))]
        
          [_
           (error "No rules match to evaluate min of " argv)]))]
     
     ; max: POW(INT) -> INT
     [(struct Expression-UnOp ('max arg))
-          (let ([argv (eval-ast arg state)])
+     (let ([argv (eval-ast arg state)])
      
-       (match (eval-ast ast state)
+       (match argv
          
          [(struct Set-Enumeration (exprs))
-          (last exprs)]
+          (make-Integer-Literal (apply max (map Integer-Literal-val exprs)))]
        
          [_
           (error "No rules match to evaluate min of " argv)]))]
