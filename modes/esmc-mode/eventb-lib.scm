@@ -1,7 +1,10 @@
 #lang scheme
 
 (require scheme/match
-         (only-in srfi/1 find)
+         (only-in srfi/1 
+                  find 
+                  lset-union
+                  lset-difference)
          "../../ast/predexpr.scm"
          "state.scm"
          "../../untyped-utils.scm")
@@ -163,14 +166,39 @@
      (error "Unimplemented.")]
     
     [(struct Expression-BinOp ('bunion arg1 arg2))
-     (error "Unimplemented.")]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         [(cons _ (struct Expression-Literal ('emptyset))) earg1]
+         [(cons (struct Expression-Literal ('emptyset)) _) earg2]
+         
+         [(cons (struct Set-Enumeration (exprs1))
+                (struct Set-Enumeration (exprs2)))
+          (make-Set-Enumeration (lset-union expression/wot= exprs1 exprs2))]
+         [_
+          (error 'eval-ast/Expression-BinOp/bunion
+                 "Cannot compute the union of ~a and ~a" earg1 earg2)]))]
     
     [(struct Expression-BinOp ('binter arg1 arg2))
      (error "Unimplemented.")]
     
     [(struct Expression-BinOp ('setminus arg1 arg2))
-     (error "Unimplemented.")]
-    
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         [(cons _ (struct Expression-Literal ('emptyset))) earg1]
+         [(cons (struct Expression-Literal ('emptyset)) _) earg1]
+         [(cons (struct Set-Enumeration (exprs1))
+                (struct Set-Enumeration (exprs2)))
+          (make-Set-Enumeration (lset-difference expression/wot= exprs1 exprs2))]
+         [_
+          (error 'eval-ast/Expression-BinOp/setminus
+                 "Cannot compute the setminus of ~a and ~a" earg1 earg2)]))]
+                
     [(struct Expression-BinOp ('cprod arg1 arg2))
      (error "Unimplemented.")]
     
@@ -407,7 +435,7 @@
     [(expr state1 state2 . states)
      (eval-expression expr (apply dict-merge state1 state2 states))]
     [(expr state)
-     (printf "eval-expression ~a, state ~a~n~n" expr state)
+     ;(printf "eval-expression ~a, state ~a~n~n" expr state)
      (eval-ast expr state)]))
 
 (define eval-predicate 
@@ -415,12 +443,12 @@
     [(expr state1 state2 . states)
      (eval-predicate expr (apply state-merge state1 state2 states))]
     [(expr state)
-     (printf "eval-predicate ~a~nstate ~a~n" expr state)
+     ;(printf "eval-predicate ~a~nstate ~a~n" expr state)
      (let* ([val (eval-ast expr state)]
             [result (match val
                       [(struct Predicate-Literal ('btrue)) #t]
                       [_ #f])])
-       (printf "=> ~a~n" result)
+       ;(printf "=> ~a~n" result)
        result)]))
 
 ;;Transforms a list returned by a type enumerator into 
