@@ -50,7 +50,7 @@
 (current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
                                         "-o" "file=./casestudies/eboc/jukebox.mch"
                                         "-o" "setbound=2"
-                                        "-o" "bound=10"))
+                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/john/huffman/huffman.mch"
