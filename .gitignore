@@ -1,0 +1,6 @@
+# Ignore compilation files and dependencies
+*.zo
+*.dep
+# Ignore temporary files
+*~
+
