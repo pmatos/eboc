@@ -47,14 +47,14 @@
 ;                                        "-o" "bound=100"
 ;                                        "-o" "setbound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/jukebox.mch"
-                                        "-o" "setbound=2"
-                                        "-o" "bound=100"))
-
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-;                                        "-o" "file=../casestudies/eboc/john/huffman/huffman.mch"
+;                                        "-o" "file=./casestudies/eboc/jukebox.mch"
+;                                        "-o" "setbound=2"
 ;                                        "-o" "bound=100"))
+
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/john/huffman/huffman.mch"
+                                        "-o" "bound=100"))
 
 (command-line
  #:program "eboc" ;; Should be name of executable

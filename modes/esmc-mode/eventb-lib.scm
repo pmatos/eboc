@@ -84,19 +84,42 @@
        (make-Expression-UnOp 'pow earg))]
     
     [(struct Expression-UnOp ('pow1 arg))
-     (error "Unimplemented.")]
+     (error "Unimplemented pow1.")]
     
     [(struct Expression-UnOp ('union arg))
-     (error "Unimplemented.")]
+     (error "Unimplemented union.")]
     
     [(struct Expression-UnOp ('inter arg))
-     (error "Unimplemented.")]
+     (error "Unimplemented inter.")]
+    
+    
+;                       
+;                       
+;                       
+;       ;               
+;       ;               
+;       ;               
+;    ;;;;   ;;;  ;;;;;; 
+;   ;   ;  ;   ; ;; ; ; 
+;   ;   ;  ;   ; ;  ; ; 
+;   ;   ;  ;   ; ;  ; ; 
+;   ;  ;;  ;   ; ;  ; ; 
+;    ;;;;   ;;;  ;  ; ; 
+;                       
+;                       
+;               ;       
     
     [(struct Expression-UnOp ('dom arg))
-     (error "Unimplemented.")]
+     
+     (let ([argv (eval-ast arg state)])
+       
+       (match argv
+         [(struct Expression-Literal ('emptyset)) argv]
+         [_
+          (error "Unimplemented dom.")]))]
     
     [(struct Expression-UnOp ('ran arg))
-     (error "Unimplemented.")]
+     (error "Unimplemented ran.")]
     
     ; min: POW(INT) -> INT
     [(struct Expression-UnOp ('min arg))
@@ -127,43 +150,45 @@
     ;; Evaluation of Binary Expressions
     
     [(struct Expression-BinOp ('funimage arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented funimage.")]
     
     [(struct Expression-BinOp ('relimage arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented relimage.")]
     
     [(struct Expression-BinOp ('mapsto arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented mapsto.")]
     
     [(struct Expression-BinOp ('rel arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented rel.")]
     
     [(struct Expression-BinOp ('trel arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented trel.")]
     
     [(struct Expression-BinOp ('srel arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented srel.")]
     
     [(struct Expression-BinOp ('pfun arg1 arg2))
-     (error "Unimplemented.")]
+     (make-Expression-BinOp 'pfun 
+                            (eval-ast arg1 state)
+                            (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('tfun arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented tfun.")]
     
     [(struct Expression-BinOp ('pinj arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented pinj.")]
     
     [(struct Expression-BinOp ('tinj arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented tinj.")]
     
     [(struct Expression-BinOp ('psur arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented psur.")]
     
     [(struct Expression-BinOp ('tsur arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented tsur.")]
     
     [(struct Expression-BinOp ('tbij arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented tbij.")]
     
     [(struct Expression-BinOp ('bunion arg1 arg2))
      
@@ -182,7 +207,7 @@
                  "Cannot compute the union of ~a and ~a" earg1 earg2)]))]
     
     [(struct Expression-BinOp ('binter arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented binter.")]
     
     [(struct Expression-BinOp ('setminus arg1 arg2))
      
@@ -200,34 +225,34 @@
                  "Cannot compute the setminus of ~a and ~a" earg1 earg2)]))]
                 
     [(struct Expression-BinOp ('cprod arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented cprod.")]
     
     [(struct Expression-BinOp ('dprod arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented dprod.")]
     
     [(struct Expression-BinOp ('pprod arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented pprod.")]
     
     [(struct Expression-BinOp ('bcomp arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented bcomp.")]
     
     [(struct Expression-BinOp ('fcomp arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented fcomp.")]
     
     [(struct Expression-BinOp ('ovl arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented ovl.")]
     
     [(struct Expression-BinOp ('domres arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented domres.")]
     
     [(struct Expression-BinOp ('domsub arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented domsub.")]
     
     [(struct Expression-BinOp ('ranres arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented ranres.")]
     
     [(struct Expression-BinOp ('ransub arg1 arg2))
-     (error "Unimplemented.")]
+     (error "Unimplemented ransub.")]
     
     [(struct Expression-BinOp ('upto arg1 arg2))
      (make-Set-Enumeration 
@@ -370,6 +395,9 @@
            [earg2 (eval-ast arg2 state)])
            
        (match (cons earg1 earg2)
+         [(cons (struct Expression-Literal ('emptyset)) _)
+          (make-Predicate-Literal 'btrue)]
+         
          [(cons _ (struct Expression-Literal ('emptyset)))
           (make-Predicate-Literal 'bfalse)]
          
@@ -388,6 +416,9 @@
          
          [(cons (struct Expression-Literal ('emptyset))
                 (struct Expression-UnOp ('pow _)))
+          (make-Predicate-Literal 'btrue)]
+         
+         [(cons _ (struct Expression-Literal ('bool)))
           (make-Predicate-Literal 'btrue)]
          
          [(cons (struct Set-Enumeration (exprs1))
@@ -435,7 +466,7 @@
     [(expr state1 state2 . states)
      (eval-expression expr (apply dict-merge state1 state2 states))]
     [(expr state)
-     ;(printf "eval-expression ~a, state ~a~n~n" expr state)
+     (printf "eval-expression ~a, state ~a~n~n" expr state)
      (eval-ast expr state)]))
 
 (define eval-predicate 
@@ -443,12 +474,12 @@
     [(expr state1 state2 . states)
      (eval-predicate expr (apply state-merge state1 state2 states))]
     [(expr state)
-     ;(printf "eval-predicate ~a~nstate ~a~n" expr state)
+     (printf "eval-predicate ~a~nstate ~a~n" expr state)
      (let* ([val (eval-ast expr state)]
             [result (match val
                       [(struct Predicate-Literal ('btrue)) #t]
                       [_ #f])])
-       ;(printf "=> ~a~n" result)
+       (printf "=> ~a~n" result)
        result)]))
 
 ;;Transforms a list returned by a type enumerator into 
