@@ -103,9 +103,11 @@ The procedures generated are:
         [action-name (event-action-proc-name name)])
     (pretty-print `(define (,guard-name state)
                      ;(printf "~nGenerating deterministic guard for ~a with state ~a~n." ',guard-name state)
-                     (let ([enabled? (eval-predicate (deserialize 
-                                                      ',(serialize (strip-types guard))) 
-                                                     state)]
+                     (let ([enabled? (with-handlers 
+                                         (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                                       (eval-predicate (deserialize 
+                                                        ',(serialize (strip-types guard))) 
+                                                       state))]
                            [done? #f])
                        (lambda (msg)
                          ;(printf "~n~nPassing msg ~a to guard ~a in state ~a.~n" msg ',guard-name state)
@@ -142,17 +144,19 @@ The procedures generated are:
                                                     (to-eb-values next-enum))])
                               ;(printf "Returning next enumeration ~a for guard ~a with local state ~a.~n" next-enum ',guard-name local-state)
                               (begin0
-                                (if (eval-predicate (deserialize 
-                                                     ',(serialize 
-                                                        (strip-types
-                                                         (if (null? axioms)
-                                                             guard
-                                                             (make-Predicate-BinOp 'land 
-                                                                                   guard 
-                                                                                   (foldl (lambda (a acum) (make-Predicate-BinOp 'land acum a))
-                                                                                          (first axioms)
-                                                                                          (rest axioms)))))))
-                                                    state local-state)
+                                (if (with-handlers 
+                                         (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                                      (eval-predicate (deserialize 
+                                                       ',(serialize 
+                                                          (strip-types
+                                                           (if (null? axioms)
+                                                               guard
+                                                               (make-Predicate-BinOp 'land 
+                                                                                     guard 
+                                                                                     (foldl (lambda (a acum) (make-Predicate-BinOp 'land acum a))
+                                                                                            (first axioms)
+                                                                                            (rest axioms)))))))
+                                                    state local-state))
                                     (,action-name state local-state)
                                     #f)
                                 (set! next-enum (enum))
@@ -190,7 +194,8 @@ The procedures generated are:
   (let ([prop-name (prop-proc-name name)])
     (pretty-print `(define (,prop-name state)
                      ;(printf "Checking property ~a on state ~a.~n" ',prop-name state)
-                     (eval-predicate (deserialize ',(serialize (strip-types prop))) state))
+                     (with-handlers (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                       (eval-predicate (deserialize ',(serialize (strip-types prop))) state)))
                   fp)))
 
 ;; inits should be a list of at most 2 elements: an Assign-Action and Suchthat-Assign-Action

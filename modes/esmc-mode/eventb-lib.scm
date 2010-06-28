@@ -149,8 +149,35 @@
     
     ;; Evaluation of Binary Expressions
     
+    
+;                                                          
+;                                                          
+;                                                          
+;     ;;;;                 ;                               
+;    ;;                                                    
+;    ;                                                     
+;   ;;;;;  ;   ;  ; ;;;   ;;    ;;;;;;  ;;;    ;;;;;  ;;;  
+;    ;     ;   ;  ;;  ;    ;    ; ;; ;     ;  ;   ;  ;   ; 
+;    ;     ;   ;  ;   ;    ;    ; ;  ;     ;  ;   ;  ;   ; 
+;    ;     ;   ;  ;   ;    ;    ; ;  ;  ;;;;   ;;;   ;;;;; 
+;    ;     ;   ;  ;   ;    ;    ; ;  ; ;   ;  ;      ;     
+;    ;     ;   ;  ;   ;    ;    ; ;  ; ;   ;  ;      ;     
+;    ;      ;;;;  ;   ;   ;;;;  ; ;  ; ;;;;;  ;;;;;   ;;;; 
+;                                             ;   ;;       
+;                                             ;;;;;        
+;                                                          
+    ;; In ('funimage arg1 arg2), there is a constraint
+    ;; arg2 : dom(arg1)
     [(struct Expression-BinOp ('funimage arg1 arg2))
-     (error "Unimplemented funimage.")]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         [(cons (struct Expression-Literal ('emptyset)) _)
+          (raise 'fail-funimage)]
+         [_
+          (error "Unimplemented funimage for args ~a, ~a." earg1 earg2)]))]
     
     [(struct Expression-BinOp ('relimage arg1 arg2))
      (error "Unimplemented relimage.")]
