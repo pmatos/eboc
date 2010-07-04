@@ -54,7 +54,7 @@
 
 (current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
                                         "-o" "file=./casestudies/eboc/john/huffman/huffman.mch"
-                                        "-o" "bound=100"))
+                                        "-o" "bound=10"))
 
 (command-line
  #:program "eboc" ;; Should be name of executable

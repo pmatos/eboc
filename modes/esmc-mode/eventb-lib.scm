@@ -115,11 +115,21 @@
        
        (match argv
          [(struct Expression-Literal ('emptyset)) argv]
+         [(struct Set-Enumeration ((list (struct Expression-BinOp ('mapsto cars _)) ...)))
+          (make-Set-Enumeration cars)]
          [_
           (error "Unimplemented dom.")]))]
     
     [(struct Expression-UnOp ('ran arg))
-     (error "Unimplemented ran.")]
+     
+     (let ([argv (eval-ast arg state)])
+       
+       (match argv
+         [(struct Expression-Literal ('emptyset)) argv]
+         [(struct Set-Enumeration ((list (struct Expression-BinOp ('mapsto _ cdrs)) ...)))
+          (make-Set-Enumeration cdrs)]
+         [_
+          (error "Unimplemented ran.")]))]
     
     ; min: POW(INT) -> INT
     [(struct Expression-UnOp ('min arg))
@@ -183,7 +193,9 @@
      (error "Unimplemented relimage.")]
     
     [(struct Expression-BinOp ('mapsto arg1 arg2))
-     (error "Unimplemented mapsto.")]
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       (make-Expression-BinOp 'mapsto earg1 earg2))]
     
     [(struct Expression-BinOp ('rel arg1 arg2))
      (error "Unimplemented rel.")]
@@ -264,23 +276,131 @@
      (error "Unimplemented bcomp.")]
     
     [(struct Expression-BinOp ('fcomp arg1 arg2))
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         
+         [(or (cons (struct Expression-Literal ('emptyset)) _)
+              (cons _ (struct Expression-Literal ('emptyset))))
+          (make-Expression-Literal 'emptyset)]
+         
+         [(cons (struct Set-Enumeration (exprs1))
+                (struct Set-Enumeration (exprs2)))
+          (make-Set-Enumeration
+           (let loop1 ([e1 exprs1])
+             (if (null? e1)
+                 '()
+                 (let loop2 ([e2 exprs2])
+                   (if (null? e2)
+                       '()
+            
+          
+          
      (error "Unimplemented fcomp.")]
     
+    
+;                       
+;                       
+;                 ;;;   
+;                   ;   
+;                   ;   
+;    ;;;   ;   ;    ;   
+;   ;; ;;  ;   ;    ;   
+;   ;   ;   ; ;     ;   
+;   ;   ;   ; ;     ;   
+;   ;   ;   ;;;     ;   
+;   ;; ;;   ;;;     ;   
+;    ;;;     ;       ;; 
+;                       
+;                       
+;               ;       
+
+    
     [(struct Expression-BinOp ('ovl arg1 arg2))
-     (error "Unimplemented ovl.")]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (eval-ast 
+        (make-Expression-BinOp 'bunion
+                               (make-Expression-BinOp 'domsub
+                                                      (make-Expression-UnOp 'dom earg2)
+                                                      earg1)
+                               earg2)
+        state))]
+    
+    
+;                                            
+;                                            
+;       ;                                    
+;       ;                                    
+;       ;                                    
+;    ;;;;   ;;;   ;;;;;   ;;;;   ;;;    ;;;  
+;   ;; ;;  ;; ;;  ; ; ;   ;;  ; ;;  ;  ;   ; 
+;   ;   ;  ;   ;  ; ; ;   ;     ;   ;  ;     
+;   ;   ;  ;   ;  ; ; ;   ;     ;;;;;   ;;;  
+;   ;   ;  ;   ;  ; ; ;   ;     ;          ; 
+;   ;; ;;  ;; ;;  ; ; ;   ;     ;;  ;  ;   ; 
+;    ;;;;   ;;;   ; ; ;   ;      ;;;    ;;;  
+;                                            
+;                                            
+;                                            
+
+    [(struct Expression-BinOp ('domres arg (struct Expression-Literal ('id))))
+     
+     (match arg
+       [(struct Set-Enumeration (exprs))
+        (make-Set-Enumeration 
+         (map (lambda (e) (make-Expression-BinOp 'mapsto e e)) exprs))]
+       [_
+        (error "Can't compute : ~a <| id" arg)])]
     
     [(struct Expression-BinOp ('domres arg1 arg2))
-     (error "Unimplemented domres.")]
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       (eval-ast 
+        (make-Expression-BinOp 'fcomp
+                               (make-Expression-BinOp 'domres 
+                                                      earg1
+                                                      (make-Expression-Literal 'id))
+                               earg2)
+        state))]
     
     [(struct Expression-BinOp ('domsub arg1 arg2))
-     (error "Unimplemented domsub.")]
-    
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       (eval-ast
+        (make-Expression-BinOp 'domres
+                               (make-Expression-BinOp 'setminus
+                                                      (make-Expression-UnOp 'dom earg2)
+                                                      earg1)
+                               earg2)
+        state))]
+       
     [(struct Expression-BinOp ('ranres arg1 arg2))
-     (error "Unimplemented ranres.")]
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       (eval-ast
+        (make-Expression-BinOp 'fcomp
+                               earg1
+                               (make-Expression-BinOp 'domres 
+                                                      earg2
+                                                      (make-Expression-Literal 'id)))
+        state))]
     
     [(struct Expression-BinOp ('ransub arg1 arg2))
-     (error "Unimplemented ransub.")]
-    
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       (eval-ast 
+        (make-Expression-BinOp 'ranres 
+                               earg1
+                               (make-Expression-BinOp 'setminus
+                                                      (make-Expression-UnOp 'ran earg1)
+                                                      earg2))
+        state))]
+       
     [(struct Expression-BinOp ('upto arg1 arg2))
      (make-Set-Enumeration 
       (map make-Integer-Literal
