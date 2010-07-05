@@ -32,7 +32,6 @@
 (provide e
          subst-in-expression
          type->expression
-         (struct-out Expression-Literal)
          (struct-out Integer-Literal)
          (struct-out Lambda-Expression)
          (struct-out Set-Comprehension))
@@ -947,6 +946,42 @@
         (strip-types/pred expr/pred)
         (strip-types/expr expr/pred))))
 
+
+
+;                                                                                                                  
+;                                                                                                                  
+;                                                                                                                  
+;                                        ;;;         ;;;                                                  ;        
+;                                   ;   ;              ;                                                  ;        
+;    ;                             ;    ;              ;                                                  ;        
+;   ;;;;   ; ;;;  ;   ;   ;;;      ;   ;;;;    ;;;     ;     ;;;    ;;;          ;;;;   ; ;;;   ;;;    ;;;;   ;;;  
+;    ;     ;;     ;   ;  ;   ;    ;     ;         ;    ;    ;      ;   ;         ;   ;  ;;     ;   ;  ;   ;  ;     
+;    ;     ;      ;   ;  ;;;;;    ;     ;      ;;;;    ;     ;;    ;;;;;         ;   ;  ;      ;;;;;  ;   ;   ;;   
+;    ;     ;      ;   ;  ;       ;      ;     ;   ;    ;       ;;  ;             ;   ;  ;      ;      ;   ;     ;; 
+;    ;     ;      ;  ;;  ;       ;      ;     ;  ;;    ;        ;  ;             ;   ;  ;      ;      ;  ;;      ; 
+;     ;;;  ;       ;;;;   ;;;   ;       ;     ;;;;;  ;;;;   ;;;;    ;;;          ;;;;   ;       ;;;    ;;;;  ;;;;  
+;                                                                                ;                                 
+;                                                                                ;                                 
+;                                                                                                                  
+ 
+(define ebtrue (make-Predicate-Literal 'btrue))
+(define ebfalse (make-Predicate-Literal 'bfalse))
+(define (ebtrue? u)
+  (and (Predicate-Literal? u)
+       (eqv? (Predicate-Literal-lit u) 'btrue)))
+(define (ebfalse? u)
+  (and (Predicate-Literal? u)
+       (eqv? (Predicate-Literal-lit u) 'bfalse)))
+(define-syntax eband 
+  (syntax-rules ()
+    [(eband a ...) (and (ebtrue? a) ...)]))
+(define-syntax ebor
+  (syntax-rules ()
+    [(ebor a ...) (or (ebtrue? a) ...)]))
+(define ebnot ebfalse?)
+
+(provide eband ebor)
+
 ;                                                                 
 ;                                                                 
 ;                                                                 
@@ -966,6 +1001,11 @@
 
 (provide/contract
  [struct Predicate-Literal ((lit (one-of/c 'btrue 'bfalse)))]
+ [ebtrue ebtrue?]
+ [ebfalse ebfalse?]
+ [ebtrue? (any/c . -> . boolean?)]
+ [ebfalse? (any/c . -> . boolean?)]
+ [ebnot (Predicate-Literal? . -> . Predicate-Literal?)]
  [struct Predicate-Partition ((args (listof expression?)))]
  [struct Predicate-Finite ((expr expression?))]
  [struct Variable-Pair ((car (or/c Variable? Variable-Pair?)) (cdr (or/c Variable? Variable-Pair?)))]
@@ -975,6 +1015,7 @@
  [struct Quantifier ((quant (apply one-of/c (available-ops quantifier-op-table)))
                      (var (or/c Variable? typed-variable?))
                      (body predicate?))]
+ [struct Expression-Literal ((val (apply one-of/c (available-ops expression-literal-table))))]
  [struct Expression-Bool ((pred predicate?))]
  [struct Expression-UnOp ((op (apply one-of/c (available-ops expression-unop-table)))
                           (arg expression?))]

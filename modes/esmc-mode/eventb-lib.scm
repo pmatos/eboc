@@ -186,9 +186,27 @@
        (match (cons earg1 earg2)
          [(cons (struct Expression-Literal ('emptyset)) _)
           (raise 'fail-funimage)]
+         
          [_
-          (error "Unimplemented funimage for args ~a, ~a." earg1 earg2)]))]
+          (error 'Expression-BinOp/funimage "Unimplemented funimage for args ~a, ~a." earg1 earg2)]))]
     
+    
+;                                                                        
+;                                                                        
+;                                                                        
+;                               ;;;      ;                               
+;                                 ;                                      
+;                                 ;                                      
+;                 ; ;;;   ;;;     ;     ;;   ;;;;;;   ;;;    ;;;;   ;;;  
+;   ;;;;;         ;;     ;   ;    ;      ;   ;; ; ;      ;  ;  ;   ;   ; 
+;                 ;      ;;;;;    ;      ;   ;  ; ;   ;;;;  ;  ;   ;;;;; 
+;                 ;      ;        ;      ;   ;  ; ;  ;   ;  ;;;    ;     
+;                 ;      ;        ;      ;   ;  ; ;  ;  ;;  ;      ;     
+;                 ;       ;;;   ;;;;   ;;;;  ;  ; ;  ;;;;;  ;;;;    ;;;  
+;                                                           ;   ;        
+;                                                           ;;;;         
+;                                                                        
+
     [(struct Expression-BinOp ('relimage arg1 arg2))
      (error "Unimplemented relimage.")]
     
@@ -289,16 +307,22 @@
          [(cons (struct Set-Enumeration (exprs1))
                 (struct Set-Enumeration (exprs2)))
           (make-Set-Enumeration
-           (let loop1 ([e1 exprs1])
+           (let loop1 ([e1 exprs1] [final '()])
              (if (null? e1)
-                 '()
-                 (let loop2 ([e2 exprs2])
-                   (if (null? e2)
-                       '()
-            
-          
-          
-     (error "Unimplemented fcomp.")]
+                 final
+                 (loop1 (rest exprs1) 
+                       (append final 
+                               (let loop2 ([e2 exprs2] [acum '()])
+                                 (cond [(null? e2) acum]
+                                       [(expression/wot= (Expression-BinOp-arg2 (first e1))
+                                               (Expression-BinOp-arg1 (first e2)))
+                                        (loop2 (rest e2) (cons (make-Expression-BinOp 'mapsto 
+                                                                                      (Expression-BinOp-arg1 (first e1))
+                                                                                      (Expression-BinOp-arg2 (first e2)))
+                                                               acum))]
+                                       [else (loop2 (rest e2) acum)])))))))]
+         [_         
+          (error "Unimplemented fcomp.")]))]
     
     
 ;                       
@@ -351,11 +375,13 @@
     [(struct Expression-BinOp ('domres arg (struct Expression-Literal ('id))))
      
      (match arg
+       [(struct Expression-Literal ('emptyset)) arg]
+       
        [(struct Set-Enumeration (exprs))
         (make-Set-Enumeration 
          (map (lambda (e) (make-Expression-BinOp 'mapsto e e)) exprs))]
        [_
-        (error "Can't compute : ~a <| id" arg)])]
+        (error 'Expression-BinOp/domres/id "Can't compute : ~a <| id" arg)])]
     
     [(struct Expression-BinOp ('domres arg1 arg2))
      (let ([earg1 (eval-ast arg1 state)]
@@ -467,8 +493,8 @@
        
        [(struct Predicate-Literal (lit))
         (if (eqv? lit 'bfalse)
-            (make-Predicate-Literal 'btrue)
-            (make-Predicate-Literal 'bfalse))]
+            ebtrue
+            ebfalse)]
        
        [_
         (error 'eval-ast/Predicate-UnOp/not 
@@ -485,28 +511,28 @@
             [(cons (struct Predicate-Literal ('btrue))
                    (struct Predicate-Literal ('btrue)))
              earg1]
-            [_ (make-Predicate-Literal 'bfalse)])]
+            [_ ebfalse])]
 
          [(lor) 
           (match (cons earg1 earg2)
             [(cons (struct Predicate-Literal ('bfalse))
                    (struct Predicate-Literal ('bfalse)))
              earg1]
-            [_ (make-Predicate-Literal 'btrue)])]
+            [_ ebtrue])]
          
          [(limp) 
           (match (cons earg1 earg2)
             [(cons (struct Predicate-Literal ('btrue))
                    (struct Predicate-Literal ('bfalse)))
              earg2]
-            [_ (make-Predicate-Literal 'btrue)])]
+            [_ ebtrue])]
          
          [(leqv) 
           (match (list earg1 earg2)
             [(list-no-order (struct Predicate-Literal ('bfalse))
                             (struct Predicate-Literal ('btrue)))
-             (make-Predicate-Literal 'bfalse)]
-            [_ (make-Predicate-Literal 'btrue)])]))]
+             ebfalse]
+            [_ ebtrue])]))]
              
     [(struct Predicate-RelOp ('notequal arg1 arg2))
      (eval-ast (make-Predicate-UnOp 'not (make-Predicate-RelOp 'equal arg1 arg2)) state)]
@@ -525,57 +551,106 @@
                (and (eqv? op 'le) (<= int1 int2))
                (and (eqv? op 'gt) (> int1 int2))
                (and (eqv? op 'ge) (>= int1 int2)))
-           (make-Predicate-Literal 'btrue)
-           (make-Predicate-Literal 'bfalse)))]
+           ebtrue
+           ebfalse))]
     
     [(struct Predicate-RelOp ('equal arg1 arg2)) 
      (let ([earg1 (eval-ast arg1 state)]
            [earg2 (eval-ast arg2 state)])
        
        (if (expression/wot= earg1 earg2)
-           (make-Predicate-Literal 'btrue)
-           (make-Predicate-Literal 'bfalse)))]
+           ebtrue
+           ebfalse))]
              
+    
+;                              
+;                              
+;                              
+;                   ;          
+;                              
+;                              
+;                  ;;    ;;;;  
+;   ;;;;;           ;    ;   ; 
+;                   ;    ;   ; 
+;                   ;    ;   ; 
+;                   ;    ;   ; 
+;                 ;;;;   ;   ; 
+;                              
+;                              
+;                              
+
     [(struct Predicate-RelOp ('in arg1 arg2))
      
      (let ([earg1 (eval-ast arg1 state)]
            [earg2 (eval-ast arg2 state)])
            
        (match (cons earg1 earg2)
+         
+         ; {} in _
          [(cons (struct Expression-Literal ('emptyset)) _)
-          (make-Predicate-Literal 'btrue)]
+          ebtrue]
          
+         ; _ in {}
          [(cons _ (struct Expression-Literal ('emptyset)))
-          (make-Predicate-Literal 'bfalse)]
+          ebfalse]
          
+         ; _ in INT
          [(cons _ (struct Expression-Literal ('integer)))
-          (make-Predicate-Literal 'btrue)]
+          ebtrue]
          
+         ; _ in NAT
          [(cons _ (struct Expression-Literal ('natural)))
           (if (>= (Integer-Literal-val earg1) 0)
-              (make-Predicate-Literal 'btrue)
-              (make-Predicate-Literal 'bfalse))]
+              ebtrue
+              ebfalse)]
          
+         ; _ in {e1, e2, ...}
          [(cons _ (struct Set-Enumeration (exprs)))
           (if (ormap (lambda (x) (expression/wot= earg1 x)) exprs)
-              (make-Predicate-Literal 'btrue)
-              (make-Predicate-Literal 'bfalse))]
+              ebtrue
+              ebfalse)]
          
+         ; {} in POW(_)
          [(cons (struct Expression-Literal ('emptyset))
                 (struct Expression-UnOp ('pow _)))
-          (make-Predicate-Literal 'btrue)]
+          ebtrue]
          
+         ; {} in BOOL
          [(cons _ (struct Expression-Literal ('bool)))
-          (make-Predicate-Literal 'btrue)]
+          ebtrue]
          
+         ; {e1, e2, ...} in POW({k1, k2, ...})
          [(cons (struct Set-Enumeration (exprs1))
                 (struct Expression-UnOp ('pow (struct Set-Enumeration (exprs2)))))
           (if (andmap (lambda (expr1)
                         (find (lambda (expr2) (expression/wot= expr1 expr2))
                               exprs2))
                       exprs1)
-              (make-Predicate-Literal 'btrue)
-              (make-Predicate-Literal 'bfalse))]
+              ebtrue
+              ebfalse)]
+         
+         ; {e1, e2, ...} in fundom +> funran
+         ; We need to check that the set {e1, e2, ...} is a partial function from fundom to funran
+         ; this means that:
+         ; - first(ek) in fundom
+         ; - second(ek) in funran
+         ; - there are no duplicates in first(ek). [function constraint]
+         [(cons (struct Set-Enumeration (exprs))
+                (struct Expression-BinOp ('pfun fundom funran)))
+          (if (and (andmap (lambda (ek)
+                             (match ek
+                               [(struct Expression-BinOp ('mapsto arg1 arg2))
+                                (eband (eval-ast (make-Predicate-RelOp 'in arg1 fundom)
+                                                 state)
+                                       (eval-ast (make-Predicate-RelOp 'in arg2 funran)
+                                                 state))]))
+                           exprs)
+                   (= (length exprs)
+                      (length (remove-duplicates exprs 
+                                                 expression/wot= 
+                                                 #:key Expression-BinOp-arg1))))
+              ebtrue
+              ebfalse)]
          
          [else
           (error 'eval-ast/Rel-Op/in
