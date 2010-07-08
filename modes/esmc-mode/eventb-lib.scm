@@ -30,6 +30,8 @@
 (define/contract (eval-ast ast state)
   ((or/c expr/wot? predicate?) state? . -> . (or/c expr/wot? predicate?))
   
+  (printf "eval-ast: ~a~n" ast)
+  
   (match ast
     
     ;; Evaluation of Literal Expressions
@@ -187,6 +189,15 @@
          [(cons (struct Expression-Literal ('emptyset)) _)
           (raise 'fail-funimage)]
          
+         [(cons (struct Set-Enumeration (exprs)) val)
+          (let ([pair (find (match-lambda 
+                              [(struct Expression-BinOp ('mapsto domval _))
+                               (expression/wot= domval val)])
+                            exprs)])
+            (if pair
+                (Expression-BinOp-arg2 pair)
+                (raise 'fail-funimage)))]
+
          [_
           (error 'Expression-BinOp/funimage "Unimplemented funimage for args ~a, ~a." earg1 earg2)]))]
     
@@ -230,10 +241,14 @@
                             (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('tfun arg1 arg2))
-     (error "Unimplemented tfun.")]
+     (make-Expression-BinOp 'tfun
+                            (eval-ast arg1 state)
+                            (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('pinj arg1 arg2))
-     (error "Unimplemented pinj.")]
+     (make-Expression-BinOp 'pinj
+                            (eval-ast arg1 state)
+                            (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('tinj arg1 arg2))
      (error "Unimplemented tinj.")]
@@ -260,11 +275,19 @@
                 (struct Set-Enumeration (exprs2)))
           (make-Set-Enumeration (lset-union expression/wot= exprs1 exprs2))]
          [_
-          (error 'eval-ast/Expression-BinOp/bunion
-                 "Cannot compute the union of ~a and ~a" earg1 earg2)]))]
+          (error 'eval-ast/bunion
+                 "Cannot compute: ~a \\/ ~a" earg1 earg2)]))]
     
     [(struct Expression-BinOp ('binter arg1 arg2))
-     (error "Unimplemented binter.")]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         
+         [_
+          (error 'eval-ast/binter 
+                 "Cannot compute: ~a /\\ ~a" earg1 earg2)]))]
     
     [(struct Expression-BinOp ('setminus arg1 arg2))
      
@@ -428,11 +451,15 @@
         state))]
        
     [(struct Expression-BinOp ('upto arg1 arg2))
-     (make-Set-Enumeration 
-      (map make-Integer-Literal
-           (build-list (+ 1 (- (Integer-Literal-val arg2)
-                               (Integer-Literal-val arg1)))
-                       (lambda (x) (+ x (Integer-Literal-val arg1))))))]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (make-Set-Enumeration 
+        (map make-Integer-Literal
+             (build-list (+ 1 (- (Integer-Literal-val earg2)
+                                 (Integer-Literal-val earg1)))
+                         (lambda (x) (+ x (Integer-Literal-val earg1)))))))]
     
     [(struct Expression-BinOp ((or 'plus 'minus 'mul 'div 'mod 'expn) arg1 arg2))
      
@@ -654,7 +681,7 @@
          
          [else
           (error 'eval-ast/Rel-Op/in
-                 "Received unexpected args to in: ~a, ~a" earg1 earg2)]))]
+                 "Can't evaluate ~a in ~a" earg1 earg2)]))]
                 
     [_
      (error 'eval-ast 
@@ -711,7 +738,7 @@
   (map (lambda (elt)
          (cond [(number? elt) (make-Integer-Literal elt)]
                [(symbol? elt) (make-Set-Literal elt)]
-               [(list? elt)
-                (make-Set-Enumeration (map to-eb-values elt))]
+               [(null? elt) (make-Expression-Literal 'emptyset)]
+               [(list? elt) (make-Set-Enumeration (map to-eb-values elt))]
                [else (error 'to-eb-values "unexpected value in list: ~a" elt)]))
        lst))
