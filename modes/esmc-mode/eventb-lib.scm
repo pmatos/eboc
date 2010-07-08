@@ -30,8 +30,6 @@
 (define/contract (eval-ast ast state)
   ((or/c expr/wot? predicate?) state? . -> . (or/c expr/wot? predicate?))
   
-  (printf "eval-ast: ~a~n" ast)
-  
   (match ast
     
     ;; Evaluation of Literal Expressions
@@ -753,7 +751,7 @@
     [(expr state1 state2 . states)
      (eval-expression expr (apply dict-merge state1 state2 states))]
     [(expr state)
-     (printf "eval-expression ~a, state ~a~n~n" expr state)
+     ;(printf "eval-expression ~a, state ~a~n~n" expr state)
      (eval-ast expr state)]))
 
 (define eval-predicate 
@@ -761,12 +759,12 @@
     [(expr state1 state2 . states)
      (eval-predicate expr (apply state-merge state1 state2 states))]
     [(expr state)
-     (printf "eval-predicate ~a~nstate ~a~n" expr state)
+     ;(printf "eval-predicate ~a~nstate ~a~n" expr state)
      (let* ([val (eval-ast expr state)]
             [result (match val
                       [(struct Predicate-Literal ('btrue)) #t]
                       [_ #f])])
-       (printf "=> ~a~n" result)
+       ;(printf "=> ~a~n" result)
        result)]))
 
 ;;Transforms a list returned by a type enumerator into 
