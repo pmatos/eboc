@@ -422,7 +422,7 @@
      
      [(struct Expression-BinOp (op arg1 arg2))
       (and (Expression-BinOp? e2)
-           (eqv? op (Expression-UnOp-op e2))
+           (eqv? op (Expression-BinOp-op e2))
            (expression/wot= arg1 (Expression-BinOp-arg1 e2))
            (expression/wot= arg2 (Expression-BinOp-arg2 e2)))]
      
@@ -1022,7 +1022,7 @@
  [struct Expression-BinOp ((op (apply one-of/c (available-ops expression-binop-table)))
                            (arg1 expression?)
                            (arg2 expression?))]
- [struct Set-Enumeration ((exprs (listof expression?)))]
+ [struct Set-Enumeration ((exprs (non-empty-listof expression?)))]
  [struct Expr/wt ((type type?) (expr expr/wot?))]
  [struct (Variable Identifier) ((name symbol?))]
  [Variable-name (Variable? . -> . symbol?)]
