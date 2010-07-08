@@ -251,7 +251,9 @@
                             (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('tinj arg1 arg2))
-     (error "Unimplemented tinj.")]
+     (make-Expression-BinOp 'tinj
+                            (eval-ast arg1 state)
+                            (eval-ast arg2 state))]
     
     [(struct Expression-BinOp ('psur arg1 arg2))
      (error "Unimplemented psur.")]
@@ -735,10 +737,12 @@
 ;; structures understandable by the eventb lib that can be evaluated.
 (provide to-eb-values)
 (define (to-eb-values lst)
-  (map (lambda (elt)
-         (cond [(number? elt) (make-Integer-Literal elt)]
-               [(symbol? elt) (make-Set-Literal elt)]
-               [(null? elt) (make-Expression-Literal 'emptyset)]
-               [(list? elt) (make-Set-Enumeration (map to-eb-values elt))]
-               [else (error 'to-eb-values "unexpected value in list: ~a" elt)]))
-       lst))
+  (letrec ([toval (lambda (elt)
+                    (cond [(number? elt) (make-Integer-Literal elt)]
+                          [(symbol? elt) (make-Set-Literal elt)]
+                          [(null? elt) (make-Expression-Literal 'emptyset)]
+                          [(list? elt) (make-Set-Enumeration (map toval elt))]
+                          [(pair? elt) (make-Expression-BinOp 'mapsto (toval (car elt)) (toval (cdr elt)))]
+                          [else (error 'to-eb-values "unexpected value in list: ~a" elt)]))])
+
+    (map toval lst)))
