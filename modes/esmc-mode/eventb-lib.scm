@@ -307,7 +307,41 @@
                  "Cannot compute the setminus of ~a and ~a" earg1 earg2)]))]
                 
     [(struct Expression-BinOp ('cprod arg1 arg2))
-     (error "Unimplemented cprod.")]
+     
+     (let ([earg1 (eval-ast arg1 state)]
+           [earg2 (eval-ast arg2 state)])
+       
+       (match (cons earg1 earg2)
+         
+         [(or (cons (struct Expression-Literal ('emptyset)) _)
+              (cons _ (struct Expression-Literal ('emptyset))))
+          (make-Expression-Literal 'emptyset)]
+          
+         [(cons (struct Set-Enumeration (exprs1))
+                (struct Set-Enumeration (exprs2)))
+          
+          (let loop1 ([e1 exprs1] [total '()])
+            
+            (if (null? e1)
+                (if (null? total)
+                    (make-Expression-Literal 'emptyset)
+                    (make-Set-Enumeration total))
+                (loop1 (rest exprs1)
+                       (append total 
+                               (let ([e1val (first e1)])
+                                 (let loop2 ([e2 exprs2] [acum '()])
+                                   (if (null? e2) 
+                                       acum
+                                       (loop2 (rest e2)
+                                              (cons (make-Expression-BinOp 'mapsto
+                                                                           e1val
+                                                                           (first e2))
+                                                    acum)))))))))]
+         
+         [_
+          (error 'eval-ast/Expression-BinOp/cprod
+                 "Cannot compute: ~a ** ~a" earg1 earg2)]))]
+                                 
     
     [(struct Expression-BinOp ('dprod arg1 arg2))
      (error "Unimplemented dprod.")]
@@ -454,14 +488,16 @@
        
     [(struct Expression-BinOp ('upto arg1 arg2))
      
-     (let ([earg1 (eval-ast arg1 state)]
-           [earg2 (eval-ast arg2 state)])
+     (let* ([earg1 (eval-ast arg1 state)]
+            [earg2 (eval-ast arg2 state)]
+            [int-list (map make-Integer-Literal
+                           (build-list (+ 1 (- (Integer-Literal-val earg2)
+                                               (Integer-Literal-val earg1)))
+                                       (lambda (x) (+ x (Integer-Literal-val earg1)))))])
        
-       (make-Set-Enumeration 
-        (map make-Integer-Literal
-             (build-list (+ 1 (- (Integer-Literal-val earg2)
-                                 (Integer-Literal-val earg1)))
-                         (lambda (x) (+ x (Integer-Literal-val earg1)))))))]
+       (if (null? int-list)
+           (make-Expression-Literal 'emptyset)
+           (make-Set-Enumeration int-list)))]
     
     [(struct Expression-BinOp ((or 'plus 'minus 'mul 'div 'mod 'expn) arg1 arg2))
      
@@ -658,14 +694,14 @@
               ebtrue
               ebfalse)]
          
-         ; {e1, e2, ...} in fundom +> funran
+         ; {e1, e2, ...} in fundom (or +> --> >->) funran
          ; We need to check that the set {e1, e2, ...} is a partial function from fundom to funran
          ; this means that:
          ; - first(ek) in fundom
          ; - second(ek) in funran
          ; - there are no duplicates in first(ek). [function constraint]
          [(cons (struct Set-Enumeration (exprs))
-                (struct Expression-BinOp ('pfun fundom funran)))
+                (struct Expression-BinOp ((or 'pfun 'tfun 'tinj) fundom funran)))
           (if (and (andmap (lambda (ek)
                              (match ek
                                [(struct Expression-BinOp ('mapsto arg1 arg2))
