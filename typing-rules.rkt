@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require "type-macros.scm") 
+(require "type-macros.rkt") 
 
 (provide eventb-bin-expr-type-rules
          eventb-unary-expr-type-rules

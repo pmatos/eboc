@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
-(require "predexpr.scm"
-         "labelled.scm"
-         "action.scm"
-         "../params.scm"
-         "../untyped-utils.scm")
+(require "predexpr.rkt"
+         "labelled.rkt"
+         "action.rkt"
+         "../params.rkt"
+         "../untyped-utils.rkt")
 
 (provide pp-Event)
 

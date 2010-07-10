@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 ;; Implementation of structures and function utilities for 
 ;; Propositional Logic

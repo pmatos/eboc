@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require (planet "ast/predexpr.scm" ("pjmatos" "eboc.plt" 1 0)))
+(require (planet "ast/predexpr.rkt" ("pjmatos" "eboc.plt" 1 0)))
 
 (define (make-state) '())
 

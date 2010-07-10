@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 ;; Latex mode
-(require "latex-mode/ast2latex.scm"
-         "../ast.scm"
-         "../params.scm"
-         "../macro-utils.scm")
+(require "latex-mode/ast2latex.rkt"
+         "../ast.rkt"
+         "../params.rkt"
+         "../macro-utils.rkt")
 
 (provide latex-mode)
 

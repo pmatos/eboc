@@ -1,7 +1,7 @@
-#lang scheme
+#lang racket
 
-(require "environment.scm"
-         "ast.scm")
+(require "environment.rkt"
+         "ast.rkt")
 
 ;; This file implements a machine pass
 ;; that given a machine, returns the same machine, where all

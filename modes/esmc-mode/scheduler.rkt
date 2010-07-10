@@ -1,12 +1,12 @@
-#lang scheme
+#lang racket
 
 ;; This file implements the scheduler that does the search over the state space
 
 (require (prefix-in pq: "alg/priority-queue.ss")
          (prefix-in set: (planet soegaard/galore:4:2/set))
-         "eventb-lib.scm"
-         "state.scm"
-         "probabilities.scm")
+         "eventb-lib.rkt"
+         "state.rkt"
+         "probabilities.rkt")
 
 (provide register-initialisation!
          register-event!

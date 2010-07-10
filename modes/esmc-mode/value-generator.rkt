@@ -1,8 +1,8 @@
-#lang scheme
+#lang racket
 
-(require "../../types.scm"
-         "enumerations.scm"
-         "probabilities.scm")
+(require "../../types.rkt"
+         "enumerations.rkt"
+         "probabilities.rkt")
 
 ;; This module builds on value enumerations to enumerate values of any eventb type in sequence.
 ;; For example: POW(Z), POW(B * Z), a, POW(a * Z) , etc where a is an enumerated set.

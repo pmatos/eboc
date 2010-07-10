@@ -1,11 +1,11 @@
-#lang scheme
+#lang racket
 
 (require (planet schematics/schemeunit:3:4/text-ui)
          (planet schematics/schemeunit:3:4/test)
          (only-in srfi/1 every)
-         "../ast/predexpr.scm")
+         "../ast/predexpr.rkt")
 
-(require/export "../pass-typing.scm"
+(require/export "../pass-typing.rkt"
                 (pass-predicate))
 
 (run-tests

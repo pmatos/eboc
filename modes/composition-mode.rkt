@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 ;; This mode implements composition of machines.
 ;; Given two typed machines, it composes them according to some rules
@@ -6,10 +6,10 @@
 ;; machine to be meaninful.
 
 (require (only-in srfi/1 lset-intersection lset-union)
-         "../ast.scm"
-         "../params.scm"
-         "../macro-utils.scm"
-         "../eventb-parser.scm")
+         "../ast.rkt"
+         "../params.rkt"
+         "../macro-utils.rkt"
+         "../eventb-parser.rkt")
 
 (provide composition-mode)
 

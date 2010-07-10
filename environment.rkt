@@ -1,7 +1,7 @@
-#lang scheme
+#lang racket
 
-(require "ast.scm"
-         "types.scm")
+(require "ast.rkt"
+         "types.rkt")
 
 ;; Defines functions to work with environments which 
 ;; contain pairs Variables / Types

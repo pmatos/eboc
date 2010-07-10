@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 (require (planet williams/science/random-distributions))
 

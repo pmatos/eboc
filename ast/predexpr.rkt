@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require scheme/serialize
          scheme/contract
@@ -6,10 +6,10 @@
          scheme/list
          (only-in srfi/1 find every lset-union lset-difference)
          (only-in srfi/13 string-drop-right)
-         "../params.scm"
-         "../utils.scm"
-         "../types.scm"
-         "../printer-tables.scm")
+         "../params.rkt"
+         "../utils.rkt"
+         "../types.rkt"
+         "../printer-tables.rkt")
 
 
 ;                                                                               

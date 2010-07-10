@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 (provide eboc-unreachable
          eboc-not-implemented)

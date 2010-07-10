@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 ;; types tests
 (require (planet schematics/schemeunit:3:4/text-ui)
          (planet schematics/schemeunit:3:4/test)
          (only-in srfi/1 every)
-         "../modes/esmc-mode/interval.scm")
+         "../modes/esmc-mode/interval.rkt")
 
 (run-tests
  (test-suite

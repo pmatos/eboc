@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require "ast.scm")
+(require "ast.rkt")
 
 ;; This is a post typing simplification pass.
 

@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 (require (only-in srfi/1 lset-union lset-difference)
          (prefix-in set: (planet soegaard/galore:4:1/set))
-         "ast.scm"
-         "types.scm"
-         "environment.scm")
+         "ast.rkt"
+         "types.rkt"
+         "environment.rkt")
 
 (provide (rename-out (pass-machine machine/simplify)))
 

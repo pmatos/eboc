@@ -1,16 +1,15 @@
-#lang scheme
+#lang racket
 
 (require srfi/13
          srfi/14
          scheme/cmdline
-         "modes/latex-mode.scm"
-         "modes/composition-mode.scm"
-         "modes/esmc-mode.scm"
-         "params.scm")
+         "modes/latex-mode.rkt"
+         "modes/composition-mode.rkt"
+         "modes/esmc-mode.rkt"
+         "params.rkt")
 
 ;; EBOC by Paulo J. Matos <pocmatos@gmail.com>
 (define version-str "0.1")
-;; Changelog:
 
 (working-directory (current-directory))
 
@@ -33,14 +32,14 @@
 ;                                        "-o" "file=../casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/john/regs/regs.mch"
-                                        "-o" "setbound=10"
-                                        "-o" "bound=3"))
-
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-;                                        "-o" "file=../casestudies/eboc/infinite.mch"
+;                                        "-o" "file=./casestudies/eboc/john/regs/regs.mch"
+;                                        "-o" "setbound=5"
 ;                                        "-o" "bound=100"))
+
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/infinite.mch"
+                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/jenny/has-db/has_db.mch"

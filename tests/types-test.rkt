@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 ;; types tests
 (require (planet schematics/schemeunit:3:4/text-ui)
          (planet schematics/schemeunit:3:4/test)
          (only-in srfi/1 every)
-         "../types.scm")
+         "../types.rkt")
 
 ;; Type definition
 (define t0 (t '(P Z)))

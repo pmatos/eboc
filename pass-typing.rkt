@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 (require (only-in srfi/1 every)
-         "ast.scm"
-         "types.scm"
-         "typing-rules.scm"
-         "environment.scm")
+         "ast.rkt"
+         "types.rkt"
+         "typing-rules.rkt"
+         "environment.rkt")
 
 ;; The environment passed around associates a variable to a type
 ;; that corresponds to it. It is basically an (assoc (symbol? . Type?) ...).

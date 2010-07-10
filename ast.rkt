@@ -1,18 +1,18 @@
-#lang scheme
+#lang racket
 
 ;; This file defines the structures for the creation of the AST of Event-B.
 
-(require "ast/action.scm"
-         "ast/labelled.scm"
-         "ast/predexpr.scm"
-         "ast/event.scm"
-         "ast/context.scm"
-         "ast/machine.scm")
+(require "ast/action.rkt"
+         "ast/labelled.rkt"
+         "ast/predexpr.rkt"
+         "ast/event.rkt"
+         "ast/context.rkt"
+         "ast/machine.rkt")
 
-(provide (all-from-out "ast/action.scm" 
-                       "ast/labelled.scm" 
-                       "ast/predexpr.scm" 
-                       "ast/event.scm" 
-                       "ast/context.scm" 
-                       "ast/machine.scm"))
+(provide (all-from-out "ast/action.rkt" 
+                       "ast/labelled.rkt" 
+                       "ast/predexpr.rkt" 
+                       "ast/event.rkt" 
+                       "ast/context.rkt" 
+                       "ast/machine.rkt"))
 

@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require "params.scm")
+(require "params.rkt")
 
 ;                                                                               
 ;                                                                               

@@ -1,17 +1,17 @@
-#lang scheme
+#lang racket
 
 ;; Explicit State Model Checking mode
-(require "../params.scm"
-         "../eventb-parser.scm"
-         "../pass-resolve-ids.scm"
-         "../pass-simplify.scm"
-         "../pass-posttyping-simplify.scm"
-         "../pass-typing.scm"
-         "../macro-utils.scm"
-         "../ast.scm"
-         "esmc-mode/generator.scm")
+(require "../params.rkt"
+         "../eventb-parser.rkt"
+         "../pass-resolve-ids.rkt"
+         "../pass-simplify.rkt"
+         "../pass-posttyping-simplify.rkt"
+         "../pass-typing.rkt"
+         "../macro-utils.rkt"
+         "../ast.rkt"
+         "esmc-mode/generator.rkt")
 
-(require (planet "modes/esmc-mode/search-sig.scm" ("pjmatos" "eboc.plt" 1 0)))
+(require (planet "modes/esmc-mode/search-sig.rkt" ("pjmatos" "eboc.plt" 1 0)))
 
 (provide esmc-mode)
 
@@ -24,7 +24,7 @@
                           `(require scheme/serialize 
                                     (planet ,(string-append "modes/esmc-mode/" filename) 
                                             ("pjmatos" "eboc.plt" 1 0))))
-                        '("state.scm" "serialize-utils.scm" "eventb-lib.scm" "scheduler.scm" "search-sig.scm" "value-generator.scm" "probabilities.scm"))]
+                        '("state.rkt" "serialize-utils.rkt" "eventb-lib.rkt" "scheduler.rkt" "search-sig.rkt" "value-generator.rkt" "probabilities.rkt"))]
          [file (cdr (assoc 'file mode-options))]
          [setbound (if (assoc 'setbound mode-options) (string->number (cdr (assoc 'setbound mode-options))) #f)]
          [ast (parameterize ([working-directory (build-path (working-directory) (path-only file))])

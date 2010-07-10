@@ -1,11 +1,11 @@
-#lang scheme
+#lang racket
 
-(require "labelled.scm"
-         "predexpr.scm"
-         "../params.scm"
-         "../untyped-utils.scm"
-         "../utils.scm"
-         "../types.scm")
+(require "labelled.rkt"
+         "predexpr.rkt"
+         "../params.rkt"
+         "../untyped-utils.rkt"
+         "../utils.rkt"
+         "../types.rkt")
 
 ;                                                   
 ;                                                   

@@ -1,13 +1,13 @@
-#lang scheme
+#lang racket
 
 (require scheme/match
          (only-in srfi/1 
                   find 
                   lset-union
                   lset-difference)
-         "../../ast/predexpr.scm"
-         "state.scm"
-         "../../untyped-utils.scm")
+         "../../ast/predexpr.rkt"
+         "state.rkt"
+         "../../untyped-utils.rkt")
 
 ;                                                                                             
 ;                                                                                             
@@ -300,6 +300,8 @@
          [(cons (struct Set-Enumeration (exprs1))
                 (struct Set-Enumeration (exprs2)))
           (make-Set-Enumeration (lset-difference expression/wot= exprs1 exprs2))]
+         [(cons (struct Expression-Literal ('integer)) _)
+          (make-Expression-BinOp 'setminus earg1 earg2)]
          [_
           (error 'eval-ast/Expression-BinOp/setminus
                  "Cannot compute the setminus of ~a and ~a" earg1 earg2)]))]
@@ -484,19 +486,42 @@
                                                       earg2))
         state))]
        
+    
+;                                            
+;                                            
+;                                            
+;                                            
+;                                            
+;                                ;           
+;                 ;   ;  ;;;;   ;;;;    ;;;  
+;   ;;;;;         ;   ;  ;   ;   ;     ;   ; 
+;                 ;   ;  ;   ;   ;     ;   ; 
+;                 ;   ;  ;   ;   ;     ;   ; 
+;                 ;  ;;  ;   ;   ;     ;   ; 
+;                  ;;;;  ;;;;     ;;;   ;;;  
+;                        ;                   
+;                        ;                   
+;                                            
+
+    
     [(struct Expression-BinOp ('upto arg1 arg2))
      
      (let* ([earg1 (eval-ast arg1 state)]
-            [earg2 (eval-ast arg2 state)]
-            [int-list (map make-Integer-Literal
-                           (build-list (+ 1 (- (Integer-Literal-val earg2)
-                                               (Integer-Literal-val earg1)))
-                                       (lambda (x) (+ x (Integer-Literal-val earg1)))))])
+            [earg2 (eval-ast arg2 state)])
        
-       (if (null? int-list)
-           (make-Expression-Literal 'emptyset)
-           (make-Set-Enumeration int-list)))]
-    
+       (when (or (< (Integer-Literal-val earg1) 0)
+                 (< (Integer-Literal-val earg2) 0))
+         (raise 'fail-upto))
+
+       (let ([int-list (map make-Integer-Literal
+                            (build-list (+ 1 (- (Integer-Literal-val earg2)
+                                                (Integer-Literal-val earg1)))
+                                        (lambda (x) (+ x (Integer-Literal-val earg1)))))])
+       
+         (if (null? int-list)
+             (make-Expression-Literal 'emptyset)
+             (make-Set-Enumeration int-list))))]
+
     [(struct Expression-BinOp ((or 'plus 'minus 'mul 'div 'mod 'expn) arg1 arg2))
      
      (let ([earg1 (eval-ast arg1 state)]
@@ -676,6 +701,10 @@
          ; {} in POW(_)
          [(cons (struct Expression-Literal ('emptyset))
                 (struct Expression-UnOp ('pow _)))
+          ebtrue]
+         
+         [(cons (struct Expression-Literal ('integer))
+                (struct Expression-UnOp ('pow (struct Expression-Literal ('integer)))))
           ebtrue]
          
          ; {} in BOOL

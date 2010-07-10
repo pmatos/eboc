@@ -1,10 +1,10 @@
-#lang scheme
+#lang racket
 
 ;; This module provides conversion of an AST to LaTeX.
 (require scheme/match
          mzlib/compat
-         "../../ast.scm"
-         "../../types.scm")
+         "../../ast.rkt"
+         "../../types.rkt")
 
 (define spaces/tab (make-parameter 2))
 

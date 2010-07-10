@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 ;; This module implements enumerations over values of the following types:
 ;; val? is one of:

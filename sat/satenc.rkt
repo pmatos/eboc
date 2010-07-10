@@ -1,7 +1,7 @@
-#lang scheme
+#lang racket
 
-(require "../ast.scm"
-         "prop.scm")
+(require "../ast.rkt"
+         "prop.rkt")
 
 ;; This is the main entry point for the SAT-based encoding
 ;; of predicates and expressions and the operational semantics

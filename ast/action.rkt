@@ -1,8 +1,8 @@
-#lang scheme
+#lang racket
 
 (require (only-in srfi/1 every)
-         "predexpr.scm"
-         "../utils.scm")
+         "predexpr.rkt"
+         "../utils.rkt")
 
 (provide action?)
 

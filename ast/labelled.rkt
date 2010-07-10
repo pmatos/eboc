@@ -1,8 +1,8 @@
-#lang scheme
+#lang racket
 
-(require "predexpr.scm"
-         "action.scm"
-         "../params.scm"
+(require "predexpr.rkt"
+         "action.rkt"
+         "../params.rkt"
          srfi/13)
         
 (define-struct Labelled

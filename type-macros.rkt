@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require (except-in "types.scm" t))
+(require (except-in "types.rkt" t))
 
 (provide typing-rules)
 

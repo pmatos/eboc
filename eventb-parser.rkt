@@ -1,12 +1,12 @@
-#lang scheme
+#lang racket
 
 (require srfi/1
          parser-tools/lex
          parser-tools/yacc
-         "types.scm"
-         "ast.scm"
-         "params.scm"
-         "macro-utils.scm")
+         "types.rkt"
+         "ast.rkt"
+         "params.rkt"
+         "macro-utils.rkt")
 
 (require (prefix-in : parser-tools/lex-sre))
 

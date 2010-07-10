@@ -1,13 +1,13 @@
-#lang scheme/base
+#lang racket/base
 
 (require scheme/match
          scheme/serialize
          scheme/list
          scheme/contract
          (only-in srfi/1 every cons*)
-         "params.scm"
-         "utils.scm"
-         "printer-tables.scm")
+         "params.rkt"
+         "utils.rkt"
+         "printer-tables.rkt")
 
 (provide pp-type
          t

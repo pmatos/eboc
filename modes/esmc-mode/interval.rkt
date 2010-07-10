@@ -1,6 +1,6 @@
-#lang scheme
+#lang racket
 
-(require "../../errors.scm")
+(require "../../errors.rkt")
 
 (define make-int cons)
 (define low car)

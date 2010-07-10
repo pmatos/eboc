@@ -1,12 +1,12 @@
-#lang scheme/base
+#lang racket/base
 
 (require scheme/match
          scheme/file
          scheme/list
          scheme/pretty
          scheme/serialize
-         "../../ast.scm"
-         "../../utils.scm")
+         "../../ast.rkt"
+         "../../utils.rkt")
 
 (provide generate-scheme-code)
 
@@ -104,7 +104,10 @@ The procedures generated are:
     (pretty-print `(define (,guard-name state)
                      ;(printf "~nGenerating deterministic guard for ~a with state ~a~n." ',guard-name state)
                      (let ([enabled? (with-handlers 
-                                         (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                                         (((lambda (v) 
+                                             (or (eq? v 'fail-funimage)
+                                                 (eq? v 'fail-upto))) 
+                                           (lambda (v) #f)))
                                        (eval-predicate (deserialize 
                                                         ',(serialize (strip-types guard))) 
                                                        state))]
@@ -145,7 +148,10 @@ The procedures generated are:
                               ;(printf "Returning next enumeration ~a for guard ~a with local state ~a.~n" next-enum ',guard-name local-state)
                               (begin0
                                 (if (with-handlers 
-                                         (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                                         (((lambda (v) 
+                                             (or (eq? v 'fail-funimage)
+                                                 (eq? v 'fail-upto))) 
+                                           (lambda (v) #f)))
                                       (eval-predicate (deserialize 
                                                        ',(serialize 
                                                           (strip-types
@@ -194,7 +200,10 @@ The procedures generated are:
   (let ([prop-name (prop-proc-name name)])
     (pretty-print `(define (,prop-name state)
                      ;(printf "Checking property ~a on state ~a.~n" ',prop-name state)
-                     (with-handlers (((lambda (v) (eq? v 'fail-funimage)) (lambda (v) #f)))
+                     (with-handlers (((lambda (v) 
+                                        (or (eq? v 'fail-funimage)
+                                            (eq? v 'fail-upto))) 
+                                      (lambda (v) #f)))
                        (eval-predicate (deserialize ',(serialize (strip-types prop))) state)))
                   fp)))
 
