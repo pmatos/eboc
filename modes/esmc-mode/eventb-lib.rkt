@@ -507,15 +507,15 @@
     [(struct Expression-BinOp ('upto arg1 arg2))
      
      (let* ([earg1 (eval-ast arg1 state)]
-            [earg2 (eval-ast arg2 state)])
+            [earg2 (eval-ast arg2 state)]
+            [numvals (+ 1 (- (Integer-Literal-val earg2)
+                             (Integer-Literal-val earg1)))])
        
-       (when (or (< (Integer-Literal-val earg1) 0)
-                 (< (Integer-Literal-val earg2) 0))
+       (when (< numvals 0)
          (raise 'fail-upto))
 
        (let ([int-list (map make-Integer-Literal
-                            (build-list (+ 1 (- (Integer-Literal-val earg2)
-                                                (Integer-Literal-val earg1)))
+                            (build-list numvals
                                         (lambda (x) (+ x (Integer-Literal-val earg1)))))])
        
          (if (null? int-list)
