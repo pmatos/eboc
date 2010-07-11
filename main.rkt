@@ -37,9 +37,9 @@
 ;                                        "-o" "setbound=5"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/infinite.mch"
-                                        "-o" "bound=100"))
+;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+;                                        "-o" "file=./casestudies/eboc/infinite.mch"
+;                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/jenny/has-db/has_db.mch"
