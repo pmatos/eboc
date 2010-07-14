@@ -209,8 +209,8 @@
   (match pred
     ((struct Predicate-Literal ('btrue))
      (pass-predicate (p `(not bfalse))))
-    ((struct Quantifier ('exists var body))
-     (pass-predicate (p `(not (forall ,var (not ,body))))))
+    ((struct Quantifier ('forall var body))
+     (pass-predicate (p `(not (exists ,var (not ,body))))))
     ((struct Predicate-BinOp ('limp arg1 arg2))
      (pass-predicate (p `((not ,arg1) lor ,arg2))))
     ((struct Predicate-BinOp ('leqv arg1 arg2))
