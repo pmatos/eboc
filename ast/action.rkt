@@ -63,7 +63,8 @@
   (lhs rhs)
   #:guard
   (lambda (lhs rhs type-name)
-    (unless (and (not (null? lhs))
+    (unless (and (list? lhs)
+                 (not (null? lhs))
                  (andmap (lambda (u) (or (Identifier? u) (typed-variable? u))) lhs))
       (error 'Suchthat-Assign-Action:guard:lhs "Guard failed, given: ~a" lhs))
     (unless (predicate? rhs)
