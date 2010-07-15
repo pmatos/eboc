@@ -428,6 +428,7 @@
      
      [(struct Set-Enumeration (exprs))
       (and (Set-Enumeration? e2)
+           (= (length exprs) (length (Set-Enumeration-exprs e2)))
            (andmap (lambda (expr) (find (lambda (e2-el) (expression/wot= expr e2-el))
                                         (Set-Enumeration-exprs e2)))
                    exprs))]
@@ -496,8 +497,7 @@
          subst-in-predicate
          splice/predicate
          join/predicate
-         (struct-out Predicate-UnOp)
-         (struct-out Predicate-BinOp))
+         (struct-out Predicate-UnOp))
 
 (define p
   (match-lambda 
@@ -621,13 +621,6 @@
 
 (define-serializable-struct Predicate-BinOp
   (op arg1 arg2)
-  #:guard 
-  (lambda (op arg1 arg2 type-name)
-    (unless (and (memv op (available-ops predicate-binop-table))
-                 (predicate? arg1)
-                 (predicate? arg2))
-      (error 'Predicate-BinOp:guard "Arguments for guard: op: ~a, args: (~a, ~a)" op arg1 arg2))
-    (values op arg1 arg2))
   #:property prop:custom-write
   (lambda (struct port write?)
     (pp-Predicate-BinOp struct port)))
@@ -1009,6 +1002,9 @@
  [struct Predicate-Partition ((args (listof expression?)))]
  [struct Predicate-Finite ((expr expression?))]
  [struct Variable-Pair ((car (or/c Variable? Variable-Pair?)) (cdr (or/c Variable? Variable-Pair?)))]
+ [struct Predicate-BinOp ((op (apply one-of/c (available-ops predicate-binop-table)))
+                          (arg1 predicate?)
+                          (arg2 predicate?))]
  [struct Predicate-RelOp ((op (apply one-of/c (available-ops predicate-relop-table)))
                           (arg1 expression?)
                           (arg2 expression?))]
