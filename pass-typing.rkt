@@ -1,6 +1,6 @@
 #lang racket
 
-(require (only-in srfi/1 every)
+(require (only-in srfi/1 zip every lset-union lset-difference)
          "ast.rkt"
          "types.rkt"
          "typing-rules.rkt"
@@ -321,7 +321,7 @@
 ; This function returns 4 values, a set of synthesized variables,
 ; a synthesized environment, a list of synthesized equations and a Expr/wt
 ; with the expression structure and a polymorphic type associated with it.
-(define (pass-expression ast vars env eqs) 
+(define (pass-expression ast vars env eqs)
   (match ast
     ;    expr-int: E ::= [int-lit]
     ;     E.synthesized = E.inherited
@@ -338,7 +338,7 @@
     ;     E.type = τ [τ is defined in a table in the event-b document]
     ((struct Expression-Literal (lit))
      (let-values ([(new-vars new-eqs expr-type) (eventb-expr-lit-type-rules lit)])
-       (values (append new-vars vars) 
+       (values (lset-union type=? new-vars vars) 
                env 
                (append new-eqs eqs)
                (make-Expr/wt expr-type ast))))
@@ -361,7 +361,7 @@
     ((struct Expression-UnOp (op arg))
      (let*-values ([(arg-vars arg-env arg-eqs typed-arg) (pass-expression arg vars env eqs)]
                    [(new-vars new-eqs expr-type) (eventb-unary-expr-type-rules op (Expr/wt-type typed-arg))]) ;; Still wondering if not calling pass-expr on arg with new-vars is a problem... ?!?
-       (values (append arg-vars new-vars) 
+       (values (lset-union type=? arg-vars new-vars) 
                arg-env 
                (append new-eqs arg-eqs)
                (make-Expr/wt expr-type (e `(,op ,typed-arg))))))
@@ -380,7 +380,7 @@
      (let*-values ([(arg1-vars arg1-env arg1-eqs typed-arg1) (pass-expression arg1 vars env eqs)]
                    [(arg2-vars arg2-env arg2-eqs typed-arg2) (pass-expression arg2 arg1-vars arg1-env arg1-eqs)]
                    [(new-vars new-eqs expr-type) (eventb-bin-expr-type-rules op (Expr/wt-type typed-arg1) (Expr/wt-type typed-arg2))])
-       (values (append new-vars arg2-vars) 
+       (values (lset-union type=? new-vars arg2-vars) 
                arg2-env 
                (append new-eqs arg2-eqs) 
                (make-Expr/wt expr-type (e `(,typed-arg1 ,op ,typed-arg2))))))
@@ -431,18 +431,16 @@
     
     
     ;    expr-eset: E ::= M1
-    ;       M1 .inherited = E.inherited
-    ;       E.synthesized = M1 .synthesized
-    ;       E.type = P(M1 .type)
+    ;       M1.inherited = E.inherited
+    ;       E.synthesized = M1.synthesized
+    ;       E.type = P(M1.type)
     ;
     ((struct Set-Enumeration (exprs))
      (letrec ([gen-eq-pairs
-               (lambda (ts) ;; List of types, generates the equatins required for an Expression List
-                 (let loop ([rest-ts ts] [eqs '()])
-                   (if (or (null? rest-ts) (null? (rest rest-ts)))
-                       eqs
-                       (loop (rest rest-ts) 
-                             (cons (cons (first rest-ts) (first (rest rest-ts))) eqs)))))])
+               (lambda (ts) ;; List of types, generates the equations required for an Expression List
+                 (map cons 
+                      (reverse (rest (reverse ts)))
+                      (rest ts)))])
        (let loop ([rest-expr exprs] ;; Expression to loop through
                   [vars-acum vars]
                   [env-acum env]
@@ -452,12 +450,13 @@
              (values 
               vars-acum
               env-acum
-              eqs-acum
+              (append eqs-acum (gen-eq-pairs 
+                                    (map Expr/wt-type typed-exprs)))
               (make-Expr/wt (t `(P ,(Expr/wt-type (first typed-exprs))))
                             (make-Set-Enumeration (reverse typed-exprs))))
              (let-values ([(expr-vars expr-env expr-eqs typed-expr) (pass-expression (first rest-expr) vars-acum env-acum eqs-acum)])
                (loop (rest rest-expr)
-                     (append expr-vars vars-acum)
+                     (lset-union type=? expr-vars vars-acum)
                      (env-merge/check type=? expr-env env-acum)
                      (append expr-eqs eqs-acum)
                      (cons typed-expr typed-exprs)))))))))
