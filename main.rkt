@@ -18,7 +18,7 @@
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/counter.mch"
-;                                        "-o" "bound=100"))
+;                                        "-o" "bound=40"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/ndetinit.mch"
@@ -41,9 +41,9 @@
 ;                                        "-o" "file=./casestudies/eboc/infinite.mch"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/finite.mch"
-                                        "-o" "bound=10000000"))
+;(current-command-line-arguments (vector "-v" "-m" "esmc" 
+;                                        "-o" "file=./casestudies/eboc/finite.mch"
+;                                        "-o" "bound=10000000"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=../casestudies/eboc/jenny/has-db/has_db.mch"
@@ -55,9 +55,17 @@
 ;                                        "-o" "setbound=2"
 ;                                        "-o" "bound=100"))
 
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/john/huffman/huffman_bug5.mch"
+                                        "-o" "bound=200"))
+
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-;                                        "-o" "file=./casestudies/eboc/john/huffman/huffman.mch"
+;                                        "-o" "file=./casestudies/eboc/abrial/earley/earley_00.mch"
 ;                                        "-o" "bound=10"))
+
+;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+;                                        "-o" "file=./casestudies/eboc/prob_examples/acounter/acounter.mch"
+;                                        "-o" "bound=1000"))
 
 (command-line
  #:program "eboc" ;; Should be name of executable
