@@ -31,7 +31,7 @@ Context earley_ctx_0
     @axm4 input : 1 .. s --> (S \ N) // Input (string of terminal symbols)
     @axm5 cleft : P --> NAT // The left part of a production is a non-terminal symbol
     @axm6 csize : P --> NAT1 // Size of right part of a production
-    @axm7 cright P --> (NAT +-> S) // Right part of a production
+    @axm7 cright : P --> (NAT +-> S) // Right part of a production
     @axm8 ! p . cright(p) : (1 .. (csize(p) + 0)) --> S // The right part of a production is a string of symbols
     @axm12 axiom : P // The first production
     @axm13 partition(S, {Init}, {Expr}, {Term}, {Factor}, {plus}, {mult}, {number}) // axioms 14 to 34 are the expansions of this partition
