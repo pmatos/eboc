@@ -19,6 +19,9 @@
 (define (make-empty-env var-p? var-eq)
   (make-Environment '() var-p? var-eq))
 
+(define (make-empty-env/from-env env)
+  (make-Environment '() (Environment-var-p? env) (Environment-var-eq env)))
+
 ; Adds a binding to the environment and returns a new environment
 ; if a binding already exists for this variable proc is called with it.
 (define (env-add-binding env var bind (proc (lambda (s) (error 'env-add-binding "Element already exists in environment: ~a" s))))
@@ -104,6 +107,7 @@
  [make-empty-env (->d ((var-p? contract?) (eq (var-p? var-p? . -> . boolean?))) 
                       ()
                       (e Environment?))]
+ [make-empty-env/from-env (-> Environment? Environment?)]
  [env-get-binding (->d ((env Environment?) (var (Environment-var-p? env)))
                        ()
                        (res (or/c false/c (cons/c (Environment-var-p? env) any/c))))]
