@@ -40,6 +40,12 @@
   (match-lambda 
     ((? integer? int) 
      (make-Integer-Literal int))
+    (`(eset ,els ...)
+     (if (null? els)
+         (make-Expression-Literal 'emptyset)
+         (make-Set-Enumeration (map e els))))
+    (`(setlit ,(? symbol? lit))
+     (make-Set-Literal lit))
     ((? (lambda (s) (memq s (available-ops expression-literal-table))) lit)
      (make-Expression-Literal lit))
     (`(,(? (lambda (s) (memq s (available-ops expression-unop-table))) op) ,arg)
@@ -509,6 +515,10 @@
      (make-Predicate-BinOp op (p arg1) (p arg2)))
     (`(,arg1 ,(? (lambda (s) (memq s (available-ops predicate-relop-table))) op) ,arg2)
      (make-Predicate-RelOp op (e arg1) (e arg2)))
+    (`(exists ,var ,body)
+     (make-Quantifier 'exists (e var) (p body)))
+    (`(forall ,var ,body)
+     (make-Quantifier 'forall (e var) (p body)))
     ((? predicate? p) p)
     (sexpr (error 'p "Cannot generate predicate from s-expr: ~a"  sexpr))))
 
