@@ -398,7 +398,7 @@
              (let loop1 ([e1 exprs1] [final '()])
                (if (null? e1)
                    final
-                   (loop1 (rest exprs1) 
+                   (loop1 (rest e1) 
                           (append final 
                                   (let loop2 ([e2 exprs2] [acum '()])
                                     (cond [(null? e2) acum]
