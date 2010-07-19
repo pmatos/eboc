@@ -26,15 +26,15 @@
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/consts.mch"
-;                                        "-o" "bound=10"))
-
-;(current-command-line-arguments (vector "-v" "-m" "esmc" 
-;                                        "-o" "file=../casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
 ;                                        "-o" "bound=100"))
+
+(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+                                        "-o" "file=./casestudies/eboc/mbutler/ctsctrl/ctsctrl.mch"
+                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/john/regs/regs.mch"
-;                                        "-o" "setbound=5"
+;                                        "-o" "setbound=5"                            
 ;                                        "-o" "bound=100"))
 
 ;(current-command-line-arguments (vector "-v" "-m" "esmc" 
@@ -55,9 +55,9 @@
 ;                                        "-o" "setbound=2"
 ;                                        "-o" "bound=100"))
 
-(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
-                                        "-o" "file=./casestudies/eboc/john/huffman/huffman_bug5.mch"
-                                        "-o" "bound=200"))
+;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
+;                                        "-o" "file=./casestudies/eboc/john/huffman/huffman_bug5.mch"
+;                                        "-o" "bound=200"))
 
 ;(current-command-line-arguments (vector "-v" "-d" "-m" "esmc" 
 ;                                        "-o" "file=./casestudies/eboc/abrial/earley/earley_00.mch"
