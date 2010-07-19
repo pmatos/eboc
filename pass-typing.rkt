@@ -24,7 +24,7 @@
                                            (Variable-name (Expr/wt-expr typed-var))
                                            (Expr/wt-type typed-var)))
                         initial-env
-                        (append typed-vars (map typed-variable->typed-post-variable typed-vars)))])
+                        (lset-union type=? typed-vars (map typed-variable->typed-post-variable typed-vars)))])
            (let ([typed-events (map (lambda (ev) (pass-event ev machine-env)) events)]
                  [typed-variants (map (lambda (variant) (pass-expression/retype variant machine-env))
                                       variants)]
@@ -296,16 +296,17 @@
        (let*-values ([(arg1-vars arg1-env arg1-eqs typed-arg1) (pass-expression arg1 (cons fresh-var vars) env eqs)]
                      [(arg2-vars arg2-env arg2-eqs typed-arg2) (pass-expression arg2 arg1-vars arg1-env arg1-eqs)])
          (values arg2-vars arg2-env 
-                 (append arg2-eqs ;; the equations to append depend on the op
-                         (case op
-                           [(equal notequal) (list (cons (Expr/wt-type typed-arg1) fresh-var)
-                                                   (cons (Expr/wt-type typed-arg2) fresh-var))]
-                           [(lt gt ge le) (list (cons (Expr/wt-type typed-arg1) (make-Type-Integer))
-                                                (cons (Expr/wt-type typed-arg2) (make-Type-Integer)))]
-                           [(in notin) (list (cons (Expr/wt-type typed-arg1) fresh-var)
-                                             (cons (Expr/wt-type typed-arg2) (make-Type-Powerset fresh-var)))]
-                           [(subset subseteq notsubset notsubseteq) (list (cons (Expr/wt-type typed-arg1) (make-Type-Powerset fresh-var))
-                                                                          (cons (Expr/wt-type typed-arg2) (make-Type-Powerset fresh-var)))]))
+                 (lset-union type-equation=? 
+                             arg2-eqs ;; the equations to append depend on the op
+                             (case op
+                               [(equal notequal) (list (cons (Expr/wt-type typed-arg1) fresh-var)
+                                                       (cons (Expr/wt-type typed-arg2) fresh-var))]
+                               [(lt gt ge le) (list (cons (Expr/wt-type typed-arg1) (make-Type-Integer))
+                                                    (cons (Expr/wt-type typed-arg2) (make-Type-Integer)))]
+                               [(in notin) (list (cons (Expr/wt-type typed-arg1) fresh-var)
+                                                 (cons (Expr/wt-type typed-arg2) (make-Type-Powerset fresh-var)))]
+                               [(subset subseteq notsubset notsubseteq) (list (cons (Expr/wt-type typed-arg1) (make-Type-Powerset fresh-var))
+                                                                              (cons (Expr/wt-type typed-arg2) (make-Type-Powerset fresh-var)))]))
                  (p `(,typed-arg1 ,op ,typed-arg2))))))))
 
 (define (pass-expression/retype expr env)
@@ -340,7 +341,7 @@
      (let-values ([(new-vars new-eqs expr-type) (eventb-expr-lit-type-rules lit)])
        (values (lset-union type=? new-vars vars) 
                env 
-               (append new-eqs eqs)
+               (lset-union type-equation=? new-eqs eqs)
                (make-Expr/wt expr-type ast))))
     
     ((or (struct Variable _)
@@ -363,7 +364,7 @@
                    [(new-vars new-eqs expr-type) (eventb-unary-expr-type-rules op (Expr/wt-type typed-arg))]) ;; Still wondering if not calling pass-expr on arg with new-vars is a problem... ?!?
        (values (lset-union type=? arg-vars new-vars) 
                arg-env 
-               (append new-eqs arg-eqs)
+               (lset-union type-equation=? new-eqs arg-eqs)
                (make-Expr/wt expr-type (e `(,op ,typed-arg))))))
     
     ;     expr-bin: E ::= E1 E2 [expr-binop]
@@ -382,7 +383,7 @@
                    [(new-vars new-eqs expr-type) (eventb-bin-expr-type-rules op (Expr/wt-type typed-arg1) (Expr/wt-type typed-arg2))])
        (values (lset-union type=? new-vars arg2-vars) 
                arg2-env 
-               (append new-eqs arg2-eqs) 
+               (lset-union type-equation=? new-eqs arg2-eqs) 
                (make-Expr/wt expr-type (e `(,typed-arg1 ,op ,typed-arg2))))))
     
     ;    expr-lambda: E ::= Q1 P1 E1
@@ -425,7 +426,7 @@
                      [(pred-vars pred-env pred-eqs typed-pred) (pass-predicate pred vs-vars vs-env vs-eqs)]
                      [(expr-vars expr-env expr-eqs typed-expr) (pass-expression expr pred-vars pred-env pred-eqs)]
                      [(comp-eqs comp-type) (eventb-expr-quant-type-rules comp-op (Expr/wt-type typed-expr))])
-         (values expr-vars expr-env (append eqs comp-eqs) 
+         (values expr-vars expr-env (lset-union type-equation=? eqs comp-eqs) 
                  (make-Expr/wt comp-type 
                                (make-Set-Comprehension comp-op typed-vs typed-pred typed-expr))))))
     
@@ -450,15 +451,15 @@
              (values 
               vars-acum
               env-acum
-              (append eqs-acum (gen-eq-pairs 
-                                    (map Expr/wt-type typed-exprs)))
+              (lset-union type-equation=? eqs-acum (gen-eq-pairs 
+                                                    (map Expr/wt-type typed-exprs)))
               (make-Expr/wt (t `(P ,(Expr/wt-type (first typed-exprs))))
                             (make-Set-Enumeration (reverse typed-exprs))))
              (let-values ([(expr-vars expr-env expr-eqs typed-expr) (pass-expression (first rest-expr) vars-acum env-acum eqs-acum)])
                (loop (rest rest-expr)
                      (lset-union type=? expr-vars vars-acum)
                      (env-merge/check type=? expr-env env-acum)
-                     (append expr-eqs eqs-acum)
+                     (lset-union type-equation=? expr-eqs eqs-acum)
                      (cons typed-expr typed-exprs)))))))))
 
 
@@ -584,6 +585,15 @@
         (make-Variable-Pair (remove-type-vars/expr car))
         (make-Variable-Pair (remove-type-vars/expr cdr)))))))
 
+; Equality function for equation lists 
+; type equations are (cons type? type?) and 
+; they are commutative
+(define/contract (type-equation=? eq1 eq2) 
+  (-> (cons/c type? type?) (cons/c type? type?) boolean?)
+  (or (and (type=? (car eq1) (car eq2))
+           (type=? (cdr eq1) (cdr eq2)))
+      (and (type=? (car eq1) (cdr eq2))
+           (type=? (cdr eq1) (car eq2)))))
 
 ;                                                                 
 ;                                                                 
