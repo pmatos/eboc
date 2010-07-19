@@ -229,7 +229,7 @@
 (define (type=? t1 t2)
   (or (and (Type-Polymorphic? t1)
            (Type-Polymorphic? t2)
-           (eqv? (Type-Polymorphic-name t1) (Type-Polymorphic-name t1)))
+           (eqv? (Type-Polymorphic-name t1) (Type-Polymorphic-name t2)))
       (and (Type-Integer? t1) (Type-Integer? t2))
       (and (Type-Boolean? t1) (Type-Boolean? t2))
       (and (Type-Enumeration? t1) (Type-Enumeration? t2) 
@@ -296,7 +296,8 @@
                             (Type-Boolean? rhs))
                        (and (Type-Enumeration? lhs)
                             (Type-Enumeration? rhs)
-                            (eqv? (Type-UndefEnumeration-name lhs) (Type-UndefEnumeration-name rhs))))
+                            (eqv? (Type-UndefEnumeration-name lhs) (Type-UndefEnumeration-name rhs)))
+                       (and (Type-Polymorphic? lhs) (type=? lhs rhs)))
                    (loop (rest stack) subst)]
                   [(Type-Polymorphic? lhs)
                    (if (occurs-check? lhs rhs)
@@ -347,4 +348,4 @@
 ;                                                                    ;; ;
 
 (provide/contract
- [struct Type-Enumeration ((name symbol?) (enum (listof symbol?)))])
+ [struct Type-Enumeration ((name symbol?) (enum (non-empty-listof symbol?)))])
