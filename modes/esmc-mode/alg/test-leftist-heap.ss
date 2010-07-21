@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 ;;; test-heap.scm  --  Jens Axel Søgaard 
 
 ;;; HISTORY
@@ -8,7 +8,7 @@
 ;   Brushup for 4xx
 
 
-(require "leftist-heap.ss")
+(require "leftist-heap.rkt")
 
 (require srfi/78 ; "srfi-check.scm"
          srfi/42

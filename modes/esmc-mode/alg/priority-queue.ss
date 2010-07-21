@@ -1,11 +1,11 @@
-#lang scheme
+#lang racket
 ;;; priority-queue.ss  --  Jens Axel Søgaard
 ;;; PURPOSE
 
 ; This file implements priority queues on top of
 ; a heap library.
 
-(require (prefix-in heap: "leftist-heap.ss")
+(require (prefix-in heap: "leftist-heap.rkt")
          srfi/67)
 
 ; a priority-queue is a heap of  (cons <priority> <element>)
