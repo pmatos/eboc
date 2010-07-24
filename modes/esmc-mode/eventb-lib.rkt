@@ -1,6 +1,6 @@
 #lang racket
 
-(require scheme/match
+(require racket/match
          (only-in srfi/1 
                   find 
                   lset-union
@@ -619,37 +619,31 @@
       
       [(struct Predicate-BinOp (op arg1 arg2))
        
-       (let ([earg1 (eval-ast arg1 state)]
-             [earg2 (eval-ast arg2 state)])
+       (let ([earg1 (eval-ast arg1 state)])
          
          (case op
            [(land) 
-            (match (cons earg1 earg2)
-              [(cons (struct Predicate-Literal ('btrue))
-                     (struct Predicate-Literal ('btrue)))
-               earg1]
-              [_ ebfalse])]
+            (if (ebfalse? earg1)
+                ebfalse
+                (eval-ast arg2 state))]
            
            [(lor) 
-            (match (cons earg1 earg2)
-              [(cons (struct Predicate-Literal ('bfalse))
-                     (struct Predicate-Literal ('bfalse)))
-               earg1]
-              [_ ebtrue])]
+            (if (ebfalse? earg1)
+                (eval-ast arg2 state)
+                ebtrue)]
            
            [(limp) 
-            (match (cons earg1 earg2)
-              [(cons (struct Predicate-Literal ('btrue))
-                     (struct Predicate-Literal ('bfalse)))
-               earg2]
-              [_ ebtrue])]
-           
+            (if (ebfalse? earg1)
+                ebtrue
+                (eval-ast arg2 state))]
+            
            [(leqv) 
-            (match (list earg1 earg2)
-              [(list-no-order (struct Predicate-Literal ('bfalse))
-                              (struct Predicate-Literal ('btrue)))
-               ebfalse]
-              [_ ebtrue])]))]
+            (let ([earg2 (eval-ast arg1 state)])
+              (match (list earg1 earg2)
+                [(list-no-order (struct Predicate-Literal ('bfalse))
+                                (struct Predicate-Literal ('btrue)))
+                 ebfalse]
+                [_ ebtrue]))]))]
       
       [(struct Predicate-RelOp ('notequal arg1 arg2))
        (eval-ast (make-Predicate-UnOp 'not (make-Predicate-RelOp 'equal arg1 arg2)) 
