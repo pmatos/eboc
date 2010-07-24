@@ -1,7 +1,8 @@
 #lang racket
 
 ;; Explicit State Model Checking mode
-(require "../params.rkt"
+(require (only-in srfi/1 cons*)
+         "../params.rkt"
          "../eventb-parser.rkt"
          "../pass-resolve-ids.rkt"
          "../pass-simplify.rkt"
@@ -20,11 +21,13 @@
 ;; bound - number of states to check
 ;; setbound - number of elements to add to deferred sets 
 (define (esmc-mode mode-options)
-  (let* ([requires (map (lambda (filename) 
-                          `(require scheme/serialize 
-                                    (planet ,(string-append "modes/esmc-mode/" filename) 
-                                            ("pjmatos" "eboc.plt" 1 0))))
-                        '("state.rkt" "serialize-utils.rkt" "eventb-lib.rkt" "scheduler.rkt" "search-sig.rkt" "value-generator.rkt" "probabilities.rkt"))]
+  (let* ([requires (cons* '(require racket/serialize)
+                          '(require racket/match)
+                          '(require racket/unit)
+                          (map (lambda (filename) 
+                                 `(require (planet ,(string-append "modes/esmc-mode/" filename) 
+                                                   ("pjmatos" "eboc.plt" 1 0))))
+                               '("state.rkt" "serialize-utils.rkt" "eventb-lib.rkt" "scheduler.rkt" "search-sig.rkt" "value-generator.rkt" "probabilities.rkt")))]
          [file (cdr (assoc 'file mode-options))]
          [setbound (if (assoc 'setbound mode-options) (string->number (cdr (assoc 'setbound mode-options))) #f)]
          [ast (parameterize ([working-directory (build-path (working-directory) (path-only file))])
