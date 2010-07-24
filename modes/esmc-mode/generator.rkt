@@ -1,10 +1,11 @@
 #lang racket/base
 
-(require scheme/match
-         scheme/file
-         scheme/list
-         scheme/pretty
-         scheme/serialize
+(require racket/match
+         racket/file
+         racket/list
+         (rename-in (only-in racket/pretty pretty-write)
+                    (pretty-write pretty-print))
+         racket/serialize
          "../../ast.rkt"
          "../../utils.rkt")
 
@@ -58,7 +59,7 @@ The procedures generated are:
     filename))
 
 (define (generate-header-code fp require-sexprs)
-  (fprintf fp "#lang scheme~n~n")
+  (fprintf fp "#lang racket/base~n~n")
   (fprintf fp ";; Code generated automatically. Not supposed to be edited.~n")
   (for-each (lambda (require) (write require fp)) require-sexprs)
   (write '(provide search@) fp))
