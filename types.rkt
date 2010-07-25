@@ -55,7 +55,7 @@
   (lambda (struct port write?)
     (pp-type struct port)))
 
-(define-serializable-struct  Type-Integer
+(define-serializable-struct Type-Integer
   ()
   #:property prop:custom-write
   (lambda (struct port write?)
