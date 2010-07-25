@@ -293,7 +293,7 @@
 ;            ;    ;                                                                                         
 ;          ;;     ;                                                                                         
 
-(define-struct Expr/wt
+(define-serializable-struct Expr/wt
   (type expr)
   #:property prop:custom-write
   (lambda (struct port write?)
@@ -879,6 +879,8 @@
 ;; but without any typing information
 (provide strip-types)
 
+;; This function will not strip the types of quantifier variables since they are needed
+;; for enumeration in the evaluation function.
 (define (strip-types expr/pred)
   (letrec ([strip-types/pred 
             (lambda (pred)
@@ -896,7 +898,7 @@
                                        (strip-types/expr arg2))]
                 [(struct Quantifier (quant var body))
                  (make-Quantifier quant
-                                  (strip-types/expr var)
+                                  var
                                   (strip-types/pred body))]
                 [(struct Predicate-Finite (expr))
                  (make-Predicate-Finite (strip-types/expr expr))]

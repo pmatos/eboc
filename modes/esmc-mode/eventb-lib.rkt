@@ -1,12 +1,15 @@
-#lang racket
+#lang racket/base
 
 (require racket/match
+         racket/contract
+         racket/list
          (only-in srfi/1 
                   find 
                   lset-union
                   lset-difference)
          "../../ast/predexpr.rkt"
          "state.rkt"
+         "value-generator.rkt"
          "../../untyped-utils.rkt")
 
 ;                                                                                             
@@ -791,7 +794,42 @@
        (error 'eval-ast 
               "No rules match to evaluate: ~a on state ~a" ast state)])))
 
+(define (eval-predicate/quantified ast state)
+  (if (not (quantified-predicate? ast))
+      (eval-ast ast state)
+      (letrec ([rip-quantvars
+                ;; Rips a list of variables that are quantified
+                ;; and the resulting predicate
+                (match-lambda
+                  [(struct Quantifier ('forall var body))
+                   (let-values ([(vars pred) (rip-quantvars body)])
+                     (values (cons var vars)
+                             pred))]
+                  [pred (values '() pred)])])
+        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])])
+          (let-values ([(vars bare-pred) (rip-quantvars 
+                                          (if neg?
+                                              (Predicate-UnOp-arg ast)
+                                              ast))])
+            (thread (lambda ()
+                      (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
+                            [untyped-vars (map Expr/wt-expr vars)])
+                        (let loop ([next-enum (enum)] [next-prt (enum 'prt)])
+                          (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
+                                                  state untyped-vars (to-eb-values next-enum))]
+                                 [result (eval-predicate/quantified bare-pred newstate)])
+                            (if (ebtrue? result)
+                                (loop (enum) (enum 'prt))
+                                (if neg? ebtrue ebfalse))))))))))))
 
+;; By now any quantifiers are universal and are all
+;; at the top of the predicate.
+(define quantified-predicate? 
+  (match-lambda
+    [(or (struct Quantifier ('forall _ _))
+         (struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))))
+     #t]
+    [_ #f]))
 ;                              
 ;                              
 ;                        ;;;   
