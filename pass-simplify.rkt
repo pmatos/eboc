@@ -188,6 +188,10 @@
     ((struct Labelled (label pred))
      (make-Labelled label (pass-predicate pred)))))
 
+(define (pass-predicate pred)
+  (pass-predicate/push-uquants
+   (pass-predicate/simp pred)))
+
 ;; Simplifications in Predicate:
 ;; Some predicates are simplified. The list follows and they are exactly the ones having 
 ;; specific match rules. (the rules noted with recurse means that the recursion will be made 
@@ -205,47 +209,136 @@
 ;; E1 !in E2 ==> ! (E1 in E2)
 ;; E1 !subseteq E2 ==> ! (E1 subseteq E2)
 ;; E1 !subset E2 ==> ! (E1 subset E2)
-(define (pass-predicate pred)
+(define (pass-predicate/simp pred)
   (match pred
     ((struct Predicate-Literal ('btrue))
-     (pass-predicate (p `(not bfalse))))
-    ((struct Quantifier ('forall var body))
-     (pass-predicate (p `(not (exists ,var (not ,body))))))
-    ((struct Predicate-BinOp ('limp arg1 arg2))
-     (pass-predicate (p `((not ,arg1) lor ,arg2))))
-    ((struct Predicate-BinOp ('leqv arg1 arg2))
-     (pass-predicate (p `((,arg1 limp ,arg2) land (,arg2 limp ,arg1)))))
-    ((struct Predicate-RelOp ('le arg1 arg2))
-     (pass-predicate (p `((,arg1 lt ,arg2) lor (,arg1 equal ,arg2)))))
-    ((struct Predicate-RelOp ('gt arg1 arg2))
-     (pass-predicate (p `(not (,arg1 le ,arg2)))))
-    ((struct Predicate-RelOp ('ge arg1 arg2))
-     (pass-predicate (p `(not (,arg1 lt ,arg2)))))
-    ((struct Predicate-RelOp ('notequal arg1 arg2))
-     (pass-predicate (p `(not (,arg1 equal ,arg2)))))
+     (pass-predicate/simp (p `(not bfalse))))
+    ((struct Quantifier ('exists var body))
+     (pass-predicate/simp (p `(not (forall ,var (not ,body))))))
+;    ((struct Predicate-BinOp ('limp arg1 arg2))
+;     (pass-predicate/simp (p `((not ,arg1) lor ,arg2))))
+;    ((struct Predicate-BinOp ('leqv arg1 arg2))
+;     (pass-predicate/simp (p `((,arg1 limp ,arg2) land (,arg2 limp ,arg1)))))
+;    ((struct Predicate-RelOp ('le arg1 arg2))
+;     (pass-predicate/simp (p `((,arg1 lt ,arg2) lor (,arg1 equal ,arg2)))))
+;    ((struct Predicate-RelOp ('gt arg1 arg2))
+;     (pass-predicate/simp (p `(not (,arg1 le ,arg2)))))
+;    ((struct Predicate-RelOp ('ge arg1 arg2))
+;     (pass-predicate/simp (p `(not (,arg1 lt ,arg2)))))
+;    ((struct Predicate-RelOp ('notequal arg1 arg2))
+;     (pass-predicate/simp (p `(not (,arg1 equal ,arg2)))))
     ((struct Predicate-RelOp ('subseteq arg1 arg2))
-     (pass-predicate (p `(,arg1 in (pow ,arg2)))))
+     (pass-predicate/simp (p `(,arg1 in (pow ,arg2)))))
     ((struct Predicate-RelOp ('subset arg1 arg2))
-     (pass-predicate (p `((,arg1 subseteq ,arg2) land (,arg1 notequal ,arg2)))))
+     (pass-predicate/simp (p `((,arg1 subseteq ,arg2) land (,arg1 notequal ,arg2)))))
     ((struct Predicate-RelOp ('notin arg1 arg2))
-     (pass-predicate (p `(not (,arg1 in ,arg2)))))
+     (pass-predicate/simp (p `(not (,arg1 in ,arg2)))))
     ((struct Predicate-RelOp ('notsubset arg1 arg2))
-     (pass-predicate (p `(not (,arg1 subset ,arg2)))))
+     (pass-predicate/simp (p `(not (,arg1 subset ,arg2)))))
     ((struct Predicate-RelOp ('notsubseteq arg1 arg2))
-     (pass-predicate (p `(not (,arg1 subseteq ,arg2)))))
+     (pass-predicate/simp (p `(not (,arg1 subseteq ,arg2)))))
     
     ;; DEFAULT
     ((struct Quantifier (quant var body))
-     (make-Quantifier quant var (pass-predicate body)))
+     (make-Quantifier quant var (pass-predicate/simp body)))
     ((struct Predicate-UnOp (op arg))
-     (make-Predicate-UnOp op (pass-predicate arg)))
+     (make-Predicate-UnOp op (pass-predicate/simp arg)))
     ((struct Predicate-BinOp (op arg1 arg2))
-     (make-Predicate-BinOp op (pass-predicate arg1) (pass-predicate arg2)))
+     (make-Predicate-BinOp op (pass-predicate/simp arg1) (pass-predicate/simp arg2)))
     ((struct Predicate-RelOp (op arg1 arg2))
      (make-Predicate-RelOp op (pass-expression arg1) (pass-expression arg2)))
     ((struct Predicate-Literal _)
-     pred)))
+     pred)
+    (_
+     (error 'pass-predicate/simplify "Unexpected predicate : ~a" pred))))
 
+;; Given a predicate with only universal quantification
+;; it pushes all the quantifiers to the beginning of the formula.
+(define (pass-predicate/push-uquants predicate)
+  (letrec ([reapply-quantification
+            (lambda (var/neg-quants predicate)
+              (foldr (lambda (v/neg-pair acum)
+                       (let ([quant (make-Quantifier 'forall 
+                                                     (car v/neg-pair)
+                                                     acum)])
+                         (if (cdr v/neg-pair)
+                             (make-Predicate-UnOp 'not quant)
+                             quant)))
+                     predicate
+                     var/neg-quants))]
+           [get-values/predicate
+            (match-lambda
+              ((struct Predicate-UnOp 
+                 ('not
+                  (struct Quantifier ('forall var body))))
+               (let-values ([(var/negs spred) (get-values/predicate body)])
+                 (values (cons (cons var #t) var/negs) spred)))
+              ((struct Quantifier ('forall var body))
+               (let-values ([(var/negs spred) (get-values/predicate body)])
+                 (values (cons (cons var #f) var/negs) spred)))
+              ((and pred (struct Quantifier ('exists _ _)))
+               (error 'pass-expression/push-uquants
+                      "Can't deal with existential quants at this level: ~a" pred))
+              ((struct Predicate-UnOp (op arg))
+               (let-values ([(var/negs spred) (get-values/predicate arg)])
+                 (values var/negs (make-Predicate-UnOp op spred))))
+              ((struct Predicate-BinOp (op arg1 arg2))
+               (let-values ([(var/negs1 spred1) (get-values/predicate arg1)]
+                            [(var/negs2 spred2) (get-values/predicate arg2)])
+                 (values (append var/negs1 var/negs2)
+                         (make-Predicate-BinOp op spred1 spred2))))
+              ((struct Predicate-RelOp (op arg1 arg2))
+               (let-values ([(var/negs1 sexpr1) (get-values/expression arg1)]
+                            [(var/negs2 sexpr2) (get-values/expression arg2)])
+                 (values (append var/negs1 var/negs2)
+                         (make-Predicate-RelOp op sexpr1 sexpr2))))
+              ((and pred (struct Predicate-Literal (lit))) (values '() pred))
+              (pred (error 'pass-predicate/push-uquants 
+                           "Unexpected predicate: ~a" pred)))]
+           [get-values/expression
+            (match-lambda
+              ((and expr
+                    (or (struct Expression-Literal _)
+                        (struct Integer-Literal _)
+                        (struct Variable _)
+                        (struct Constant _)
+                        (struct Set-Literal _)
+                        (struct Set _)))
+               (values '() expr))
+              ((struct Expression-UnOp (op arg))
+               (let-values ([(var/negs sexpr) (get-values/expression arg)])               
+                 (values var/negs (make-Expression-UnOp op sexpr))))
+              ((struct Expression-BinOp (op arg1 arg2))
+               (let-values ([(var/negs1 sexpr1) (get-values/expression arg1)]
+                            [(var/negs2 sexpr2) (get-values/expression arg2)])
+                 (values (append var/negs1 var/negs2)
+                         (make-Expression-BinOp op sexpr1 sexpr2))))
+              ((struct Lambda-Expression (id-pattern pred expr))
+               ;;; XXX IS THIS CORRECT?
+               (let-values ([(var/negs1 spred) (get-values/predicate pred)]
+                            [(var/negs2 sexpr) (get-values/expression expr)])
+                 (values (append var/negs1 var/negs2)
+                         (make-Lambda-Expression id-pattern spred sexpr))))
+              ((struct Set-Comprehension (op vars pred expr))
+               ;;; XXX SAME? IS THIS CORRECT?
+               (let-values ([(var/negs1 spred) (get-values/predicate pred)]
+                            [(var/negs2 sexpr) (get-values/expression expr)])
+                 (values (append var/negs1 var/negs2)
+                         (make-Set-Comprehension op vars spred sexpr))))
+              ((struct Set-Enumeration (exprs))
+               (let ([all-together
+                      (map (lambda (e)
+                             (let-values ([(var/neg sexpr) (get-values/expression e)])
+                               (cons var/neg sexpr)))
+                           exprs)])
+                 (values (append-map car all-together)
+                         (make-Set-Enumeration (map cdr all-together)))))
+              ((and expr _)
+               (error 'pass-predicate/push-uquants
+                      "Unexpected expression : ~a" expr)))])
+    (let-values ([(var/negs spred) (get-values/predicate predicate)])
+      (reapply-quantification var/negs spred))))
+       
 ;; Simplifications in Expression:
 ;; Some operators are simplified. The list follows and they are exactly the ones having 
 ;; specific match rules.
@@ -298,9 +391,9 @@
     ((struct Expression-BinOp (op arg1 arg2))
      (make-Expression-BinOp op (pass-expression arg1) (pass-expression arg2)))
     ((struct Lambda-Expression (id-pattern pred expr))
-     (make-Lambda-Expression id-pattern (pass-predicate pred) (pass-expression expr)))
+     (make-Lambda-Expression id-pattern (pass-predicate/simp pred) (pass-expression expr)))
     ((struct Set-Comprehension (op vars pred expr))
-     (make-Set-Comprehension op vars (pass-predicate pred) (pass-expression expr)))
+     (make-Set-Comprehension op vars (pass-predicate/simp pred) (pass-expression expr)))
     ((struct Set-Enumeration (exprs))
      (make-Set-Enumeration (map pass-expression exprs)))
     (_
