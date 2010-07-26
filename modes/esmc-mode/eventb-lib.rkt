@@ -813,7 +813,8 @@
                                               (Predicate-UnOp-arg ast)
                                               ast))])
             (thread (lambda ()
-                      (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
+                      (let ([thread-id (gensym 'thread:)]
+                            [enum (type-list-enumerator (map Expr/wt-type vars))]
                             [untyped-vars (map Expr/wt-expr vars)])
                         (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
                           ;; Check mailbox
@@ -832,7 +833,7 @@
                                     ;; Result is sent with the following shape:
                                     ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
                                     (thread-send main-thread 
-                                                 (cons (list (gensym) 'result)
+                                                 (cons (list thread-id 'result)
                                                        (list count next-enum
                                                              (if neg? ebtrue ebfalse)))))))))))))))))
 
