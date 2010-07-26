@@ -806,7 +806,8 @@
                      (values (cons var vars)
                              pred))]
                   [pred (values '() pred)])])
-        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])])
+        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])]
+              [main-thread (current-thread)])
           (let-values ([(vars bare-pred) (rip-quantvars 
                                           (if neg?
                                               (Predicate-UnOp-arg ast)
@@ -814,13 +815,26 @@
             (thread (lambda ()
                       (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
                             [untyped-vars (map Expr/wt-expr vars)])
-                        (let loop ([next-enum (enum)] [next-prt (enum 'prt)])
-                          (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
-                                                  state untyped-vars (to-eb-values next-enum))]
-                                 [result (eval-predicate/quantified bare-pred newstate)])
-                            (if (ebtrue? result)
-                                (loop (enum) (enum 'prt))
-                                (if neg? ebtrue ebfalse))))))))))))
+                        (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
+                          ;; Check mailbox
+                          (let ([msg (thread-try-receive)])
+                         
+                            (when msg
+                              (match msg
+                                [(list _ 'cover) (thread-send main-thread (cons msg count))]))
+                            
+                            (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
+                                                    state untyped-vars (to-eb-values next-enum))]
+                                   [result (eval-predicate/quantified bare-pred newstate)])
+                              (if (ebtrue? result)
+                                  (loop (enum) (enum 'prt) (+ count 1))
+                                  (begin
+                                    ;; Result is sent with the following shape:
+                                    ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
+                                    (thread-send main-thread 
+                                                 (cons (list (gensym) 'result)
+                                                       (list count next-enum
+                                                             (if neg? ebtrue ebfalse)))))))))))))))))
 
 ;; By now any quantifiers are universal and are all
 ;; at the top of the predicate.
