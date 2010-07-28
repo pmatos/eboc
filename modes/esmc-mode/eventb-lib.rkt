@@ -294,22 +294,22 @@
             (error 'eval-ast/binter 
                    "Cannot compute: ~a /\\ ~a" earg1 earg2)]))]
       
-;                                                                        
-;                                                                        
-;                                               ;                        
-;                                 ;                                      
-;                                 ;                                      
-;                  ;;;    ;;;   ;;;;;  ;;;;;  ;;;    ;;;;   ;   ;   ;;;  
-;                 ;   ;  ;;  ;    ;    ; ; ;    ;    ;;  ;  ;   ;  ;   ; 
-;                 ;      ;   ;    ;    ; ; ;    ;    ;   ;  ;   ;  ;     
-;    ;;;           ;;;   ;;;;;    ;    ; ; ;    ;    ;   ;  ;   ;   ;;;  
-;                     ;  ;        ;    ; ; ;    ;    ;   ;  ;   ;      ; 
-;                 ;   ;  ;;  ;    ;    ; ; ;    ;    ;   ;  ;  ;;  ;   ; 
-;                  ;;;    ;;;     ;;;  ; ; ;  ;;;;;  ;   ;   ;;;;   ;;;  
-;                                                                        
-;                                                                        
-;                                                                        
-
+      ;                                                                        
+      ;                                                                        
+      ;                                               ;                        
+      ;                                 ;                                      
+      ;                                 ;                                      
+      ;                  ;;;    ;;;   ;;;;;  ;;;;;  ;;;    ;;;;   ;   ;   ;;;  
+      ;                 ;   ;  ;;  ;    ;    ; ; ;    ;    ;;  ;  ;   ;  ;   ; 
+      ;                 ;      ;   ;    ;    ; ; ;    ;    ;   ;  ;   ;  ;     
+      ;    ;;;           ;;;   ;;;;;    ;    ; ; ;    ;    ;   ;  ;   ;   ;;;  
+      ;                     ;  ;        ;    ; ; ;    ;    ;   ;  ;   ;      ; 
+      ;                 ;   ;  ;;  ;    ;    ; ; ;    ;    ;   ;  ;  ;;  ;   ; 
+      ;                  ;;;    ;;;     ;;;  ; ; ;  ;;;;;  ;   ;   ;;;;   ;;;  
+      ;                                                                        
+      ;                                                                        
+      ;                                                                        
+      
       [(struct Expression-BinOp ('setminus arg1 arg2))
        
        (let ([earg1 (eval-ast arg1 state)]
@@ -639,7 +639,7 @@
             (if (ebfalse? earg1)
                 ebtrue
                 (eval-ast arg2 state))]
-            
+           
            [(leqv) 
             (let ([earg2 (eval-ast arg1 state)])
               (match (list earg1 earg2)
@@ -794,6 +794,31 @@
        (error 'eval-ast 
               "No rules match to evaluate: ~a on state ~a" ast state)])))
 
+;(require "../../types.rkt")
+;  (define t 
+;    (eval-predicate/quantified
+;     (make-Quantifier 
+;      'forall
+;      (make-Expr/wt 
+;       (make-Type-Integer)
+;       (make-Variable 'x))
+;     (make-Predicate-UnOp 'not
+;      (make-Quantifier
+;       'forall
+;       (make-Expr/wt
+;        (make-Type-Integer)
+;        (make-Variable 'y))
+;       (make-Predicate-BinOp
+;        'land
+;        (make-Predicate-RelOp
+;         'equal 
+;         (make-Variable 'x)
+;         (make-Variable 'x))
+;        (make-Predicate-RelOp
+;         'equal
+;         (make-Variable 'y)
+;         (make-Integer-Literal 100))))))
+;     (make-state)))
 (define (eval-predicate/quantified ast state)
   (if (not (quantified-predicate? ast))
       (eval-ast ast state)
@@ -806,36 +831,59 @@
                      (values (cons var vars)
                              pred))]
                   [pred (values '() pred)])])
-        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])]
-              [main-thread (current-thread)])
+        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])])
           (let-values ([(vars bare-pred) (rip-quantvars 
                                           (if neg?
                                               (Predicate-UnOp-arg ast)
                                               ast))])
             (thread (lambda ()
-                      (let ([thread-id (gensym 'thread:)]
-                            [enum (type-list-enumerator (map Expr/wt-type vars))]
-                            [untyped-vars (map Expr/wt-expr vars)])
-                        (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
-                          ;; Check mailbox
-                          (let ([msg (thread-try-receive)])
-                         
-                            (when msg
-                              (match msg
-                                [(list _ 'cover) (thread-send main-thread (cons msg count))]))
+                      (let ([thread-id (gensym 'thread:)])
+                        (letrec ([handle-msgs
+                                  (lambda (subthread)
+                                    ;; Check mailbox
+                                    (let ([msg (thread-try-receive)])
+                                      (when msg
+                                        (match msg
+                                          [(list t 'cover)
+                                           (let ([total-count (if subthread
+                                                                  (begin (thread-send subthread (list (current-thread) 'cover))
+                                                      ;;; XXX... Continue... MESSAGE (PARSING AND CONSTRUCTION) HANDLING IS PRETTY MESSY!!!
+                                           (thread-send t (cons msg count))]
+                                          [(list t 'name) (thread-send t (cons msg thread-id))]))))])
+                        (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
+                              [untyped-vars (map Expr/wt-expr vars)])
+                          (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
                             
                             (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
                                                     state untyped-vars (to-eb-values next-enum))]
                                    [result (eval-predicate/quantified bare-pred newstate)])
-                              (if (ebtrue? result)
-                                  (loop (enum) (enum 'prt) (+ count 1))
-                                  (begin
-                                    ;; Result is sent with the following shape:
-                                    ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
-                                    (thread-send main-thread 
-                                                 (cons (list thread-id 'result)
-                                                       (list count next-enum
-                                                             (if neg? ebtrue ebfalse)))))))))))))))))
+                              
+                              (handle-msgs)
+                              
+                              (cond [(thread? result) 
+                                     ;; If it is a thread, we better wait
+                                     (let loop ()
+                                       (if (thread-running? result)
+                                           (begin
+                                             (sleep 2)
+                                             (handle-msgs)
+                                             (loop))
+                                           ; thread is not running
+                                           ; - handle result message
+                                           ; and either continue enumeration
+                                           ; or return
+                                           ))
+                                           
+                                     ]
+                                    [(ebtrue? result)
+                                     (loop (enum) (enum 'prt) (+ count 1))]
+                                    [else
+                                     ;; Result is sent with the following shape:
+                                     ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
+                                     (thread-send main-thread 
+                                                  (cons (list thread-id 'result)
+                                                        (list count next-enum
+                                                              (if neg? ebtrue ebfalse))))])))))))))))))
 
 ;; By now any quantifiers are universal and are all
 ;; at the top of the predicate.
