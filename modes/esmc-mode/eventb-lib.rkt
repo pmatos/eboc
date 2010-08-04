@@ -820,13 +820,12 @@
 ;         (make-Integer-Literal 100))))))
 ;     (make-state)))
 
-(define-structure message
+(define-struct message
   (sender      ; thread?
-   sender-name ; symbol?
-   type        ; symbol? (one-of 'query 'result 'name 'cover)
+   type        ; symbol? (one-of 'query 'result 'cover)
    reply-id    ; symbol?
    msg-id      ; symbol?
-   reply))     ; any/c  (if type is 'query, one-of 'name 'cover)
+   reply))     ; any/c  (if type is 'query, one-of 'cover)
 
 (define (eval-predicate/quantified ast state)
   (if (not (quantified-predicate? ast))
@@ -846,106 +845,95 @@
                                               (Predicate-UnOp-arg ast)
                                               ast))])
             (thread (lambda ()
-                      (let ([thread-id (gensym 'thread:)])
-                            
-                        (letrec ([gen-msg-id (lambda () (gensym 'thread-msg:))]
-                                 [make-msg
-                                  (lambda (type msg)
-                                    (make-message (current-thread) 
-                                                  thread-id
-                                                  type 
-                                                  #f
-                                                  (gen-msg-id)
-                                                  msg))]
-                                 [make-reply
-                                  (lambda (type reply-id reply)
-                                    (make-message (current-thread)
-                                                  thread-id
-                                                  type
-                                                  reply-id
-                                                  (gen-msg-id)
-                                                  reply))]
-                                 [make-reply/cover
-                                  (lambda (reply-id current-cover subthread)
-                                    (if subthread
-                                        (begin
-                                          (thread-send subthread (make-query/cover))
-                                          (match (thread-receive)
-                                            ))
-                                        (make-reply 'cover reply-id current-cover)))]
-                                 [make-msg/result
-                                  (lambda (msg) (make-msg 'result msg))]
-                                 [make-reply/name
-                                  (lambda (reply-id) (make-reply 'name reply-id thread-id))]
-                                 [make-query/cover
-                                  (lambda () (make-msg 'query 'cover))]
-                                 [make-query/name
-                                  (lambda () (make-msg 'query 'name))]
-                                 [get-msg/from 
-                                  (lambda (thread-id reply-id (wait? #f))
-                                    ;; returns the list of messages from thread-id with reply-id in the mailbox. 
-                                    ;; if there is none and wait? is #f then returns #f,
-                                    ;; otherwise it waits for the first message from thread-id with reply-id
-                                    ;; and returns it in a singleton list.
-                                    (let ([receivefn (if wait? thread-receive thread-try-receive)])
-                                      (let loop ([msg (receivefn)] [msgs '()])
-                                        (if (not msg)
-                                            (if wait?
-                                                (loop (receivefn) msgs)
-                                                (begin
-                                                  (thread-rewind-receive msgs)
-                                                  #f))
-                                            (match msg
-                                              [(struct message (_ (? (lambda (n) (eqv? n thread-id))) _ (? (lambda (r) (eqv? r reply-id))) _ _))
-                                               (list msg)]
-                                              [_ (loop (receivefn) (cons msg msgs))])))))]
-                                 [handle-msg
-                                  (lambda ((subthread #f) (block? #f))
-                                    ;; Check mailbox
-                                    (let ([msg (if block? (thread-receive) (thread-try-receive))])
-                                      (when msg
-                                        (match mgs
-                                          [(list t 'cover)
-                                           (let ([total-count 
-                                                  (if subthread
-                                                      (begin (thread-send subthread (list (current-thread) 'cover))
-                                                      ;;; XXX... Continue... MESSAGE (PARSING AND CONSTRUCTION) HANDLING IS PRETTY MESSY!!!
-                                           (thread-send t (cons msg count))]
-                                          [(list t 'name) (thread-send t (cons msg thread-id))]))))])
+                      (letrec ([gen-msg-id (lambda () (gensym 'thread-msg:))]
+                               [make-msg
+                                (lambda (type msg)
+                                  (make-message (current-thread)
+                                                type 
+                                                #f
+                                                (gen-msg-id)
+                                                msg))]
+                               [make-reply
+                                (lambda (type reply-id reply)
+                                  (make-message (current-thread)
+                                                type
+                                                reply-id
+                                                (gen-msg-id)
+                                                reply))]
+                               [make-reply/cover
+                                (lambda (reply-id current-cover subthread)
+                                  (if subthread
+                                      (let ([query (make-query/cover)])
+                                        (thread-send subthread query)
+                                        (match (get-msg/from (message-msg-id query) #t)
+                                          [(struct message (_ 'cover _ _ st/cover))
+                                           (make-reply 'cover reply-id (+ st/cover current-cover))]))
+                                      (make-reply 'cover reply-id current-cover)))]
+                               [make-msg/result
+                                (lambda (msg) (make-msg 'result msg))]
+                               [make-query/cover
+                                (lambda () (make-msg 'query 'cover))]
+                               [get-msg/from 
+                                (lambda (thread-id reply-id (wait? #f))
+                                  ;; returns the first message from thread-id with reply-id in the mailbox. 
+                                  ;; if there is none and wait? is #f then returns #f,
+                                  ;; otherwise it waits for the first message from thread-id with reply-id
+                                  ;; and returns it.
+                                  (let ([receivefn (if wait? thread-receive thread-try-receive)])
+                                    (let loop ([msg (receivefn)] [msgs '()])
+                                      (if (not msg)
+                                          (begin
+                                            (thread-rewind-receive msgs)
+                                            #f)
+                                          (match msg
+                                            [(struct message (_ _ (? (lambda (r) (eqv? r reply-id))) _ _))
+                                             (thread-rewind-receive msgs)
+                                             msg]
+                                            [_ (loop (receivefn) (cons msg msgs))])))))]
+                               [handle-query
+                                (lambda (msg cover (subthread #f))
+                                  (case (message-type msg)
+                                    [(query)
+                                     (case (message-reply msg)
+                                       [(cover)
+                                        (thread-send (message-sender msg)
+                                                     (make-reply/cover (message-msg-id msg) cover subthread))]
+                                       [else (error 'handle-query "Can't handle thread query ~a" (message-reply msg))])]
+                                    [else (error 'handle-query "Can't handle message ~a" msg)]))])
+                        
                         (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
                               [untyped-vars (map Expr/wt-expr vars)])
                           (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
                             
                             (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
                                                     state untyped-vars (to-eb-values next-enum))]
-                                   [result (eval-predicate/quantified bare-pred newstate)])
+                                   [result (eval-predicate/quantified bare-pred newstate)]
+                                   [msg (thread-try-receive)])
                               
-                              (handle-msgs)
+                              ;; We need to handle cover and name messages here
+                              (when msg
+                                (handle-query msg count))
                               
                               (cond [(thread? result) 
                                      ;; If it is a thread, we better wait
-                                     (let loop ()
-                                       (if (thread-running? result)
-                                           (begin
-                                             (sleep 2)
-                                             (handle-msgs)
-                                             (loop))
-                                           ; thread is not running
-                                           ; - handle result message
-                                           ; and either continue enumeration
-                                           ; or return
-                                           ))
-                                           
-                                     ]
+                                     (let ([msg (thread-receive)])
+                                       (case (message-type msg) 
+                                         [(query) (handle-query msg count result)]
+                                         [(result) 
+                                          (match (message-reply msg)
+                                            [(list scount senum sresult)
+                                             (make-msg/result (list (+ count scount)
+                                                                    (append enum senum)
+                                                                    (if neg?
+                                                                        (not sresult)
+                                                                        sresult)))])]))]
                                     [(ebtrue? result)
                                      (loop (enum) (enum 'prt) (+ count 1))]
                                     [else
                                      ;; Result is sent with the following shape:
                                      ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
-                                     (thread-send main-thread 
-                                                  (cons (list thread-id 'result)
-                                                        (list count next-enum
-                                                              (if neg? ebtrue ebfalse))))])))))))))))))
+                                     (make-msg/result (list count next-enum
+                                                            (if neg? ebtrue ebfalse)))]))))))))))))
 
 ;; By now any quantifiers are universal and are all
 ;; at the top of the predicate.
