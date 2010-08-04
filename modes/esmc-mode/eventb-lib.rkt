@@ -825,11 +825,15 @@
    type        ; symbol? (one-of 'query 'result 'cover)
    reply-id    ; symbol?
    msg-id      ; symbol?
-   reply))     ; any/c  (if type is 'query, one-of 'cover)
+   reply)
+  #:transparent)     ; any/c  (if type is 'query, one-of 'cover)
 
 (define (eval-predicate/quantified ast state)
   (if (not (quantified-predicate? ast))
-      (eval-ast ast state)
+      (begin
+        (printf "No quantifiers.~n")
+        (printf "eval-ast ~a ~a~n" ast state)
+        (eval-ast ast state))
       (letrec ([rip-quantvars
                 ;; Rips a list of variables that are quantified
                 ;; and the resulting predicate
@@ -839,15 +843,19 @@
                      (values (cons var vars)
                              pred))]
                   [pred (values '() pred)])])
-        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])])
+        (let ([neg? (match ast [(struct Predicate-UnOp ('not (struct Quantifier ('forall _ _)))) #t] [_ #f])]
+              [parent-thread (current-thread)])
+          (printf "neg? ~a~n" neg?)
           (let-values ([(vars bare-pred) (rip-quantvars 
                                           (if neg?
                                               (Predicate-UnOp-arg ast)
                                               ast))])
+            (printf "vars: ~a, bare-pred: ~a~n" vars bare-pred)
             (thread (lambda ()
                       (letrec ([gen-msg-id (lambda () (gensym 'thread-msg:))]
                                [make-msg
                                 (lambda (type msg)
+                                  (printf "make-msg: ~a ~a~n" type msg)
                                   (make-message (current-thread)
                                                 type 
                                                 #f
@@ -855,6 +863,7 @@
                                                 msg))]
                                [make-reply
                                 (lambda (type reply-id reply)
+                                  (printf "make-reply: ~a ~a ~a~n" type reply-id reply)
                                   (make-message (current-thread)
                                                 type
                                                 reply-id
@@ -862,19 +871,25 @@
                                                 reply))]
                                [make-reply/cover
                                 (lambda (reply-id current-cover subthread)
+                                  (printf "make-reply/cover: ~a ~a ~a~n" reply-id current-cover subthread)
                                   (if subthread
                                       (let ([query (make-query/cover)])
                                         (thread-send subthread query)
-                                        (match (get-msg/from (message-msg-id query) #t)
+                                        (match (get-msg (message-msg-id query) #t)
                                           [(struct message (_ 'cover _ _ st/cover))
                                            (make-reply 'cover reply-id (+ st/cover current-cover))]))
                                       (make-reply 'cover reply-id current-cover)))]
                                [make-msg/result
-                                (lambda (msg) (make-msg 'result msg))]
+                                (lambda (msg) 
+                                  (printf "make-msg/result: ~a~n" msg)
+                                  (make-msg 'result msg))]
                                [make-query/cover
-                                (lambda () (make-msg 'query 'cover))]
-                               [get-msg/from 
-                                (lambda (thread-id reply-id (wait? #f))
+                                (lambda () 
+                                  (printf "make-query/cover~n")
+                                  (make-msg 'query 'cover))]
+                               [get-msg
+                                (lambda (reply-id (wait? #f))
+                                  (printf "get-msg: ~a ~a~n" reply-id wait?)
                                   ;; returns the first message from thread-id with reply-id in the mailbox. 
                                   ;; if there is none and wait? is #f then returns #f,
                                   ;; otherwise it waits for the first message from thread-id with reply-id
@@ -892,6 +907,7 @@
                                             [_ (loop (receivefn) (cons msg msgs))])))))]
                                [handle-query
                                 (lambda (msg cover (subthread #f))
+                                  (printf "handle-query: ~a ~a ~a~n" msg cover subthread)
                                   (case (message-type msg)
                                     [(query)
                                      (case (message-reply msg)
@@ -899,12 +915,12 @@
                                         (thread-send (message-sender msg)
                                                      (make-reply/cover (message-msg-id msg) cover subthread))]
                                        [else (error 'handle-query "Can't handle thread query ~a" (message-reply msg))])]
-                                    [else (error 'handle-query "Can't handle message ~a" msg)]))])
+                                    [else (thread-rewind-receive (list msg))]))])
                         
                         (let ([enum (type-list-enumerator (map Expr/wt-type vars))]
                               [untyped-vars (map Expr/wt-expr vars)])
                           (let loop ([next-enum (enum)] [next-prt (enum 'prt)] [count 0])
-                            
+                            (printf "loop: ~a ~a ~a~n" next-enum next-prt count)
                             (let* ([newstate (foldl (lambda (var value state) (state-update state var value))
                                                     state untyped-vars (to-eb-values next-enum))]
                                    [result (eval-predicate/quantified bare-pred newstate)]
@@ -916,24 +932,36 @@
                               
                               (cond [(thread? result) 
                                      ;; If it is a thread, we better wait
-                                     (let ([msg (thread-receive)])
+                                     ;; until we get a result
+                                     (printf "result is thread, will wait for msg.~n")
+                                     (let wait/result ([msg (thread-receive)])
+                                       (printf "wait end, msg: ~a~n" msg)
                                        (case (message-type msg) 
-                                         [(query) (handle-query msg count result)]
+                                         [(query) 
+                                          (handle-query msg count result)
+                                          (wait/result (thread-receive))]
                                          [(result) 
+                                          (printf "msg is result~n")
                                           (match (message-reply msg)
                                             [(list scount senum sresult)
-                                             (make-msg/result (list (+ count scount)
-                                                                    (append enum senum)
-                                                                    (if neg?
-                                                                        (not sresult)
-                                                                        sresult)))])]))]
+                                             (if (or (and neg? (ebfalse? sresult))
+                                                     (and (not neg?) (ebtrue? sresult)))
+                                                 ;; subresult is true: loop
+                                                 (loop (enum) (enum 'prt) (+ count 1))
+                                                 ;; subresult is false: announce it to parent
+                                                 (thread-send 
+                                                  parent-thread
+                                                  (make-msg/result (list (+ count scount)
+                                                                         (append next-enum senum)
+                                                                         (if neg?
+                                                                             (ebnot sresult)
+                                                                             sresult)))))])]))]
                                     [(ebtrue? result)
                                      (loop (enum) (enum 'prt) (+ count 1))]
                                     [else
-                                     ;; Result is sent with the following shape:
-                                     ;; (cons (list <id> 'result) (list <cover> <enumeration> <value>))
-                                     (make-msg/result (list count next-enum
-                                                            (if neg? ebtrue ebfalse)))]))))))))))))
+                                     (thread-send parent-thread
+                                                  (make-msg/result (list count next-enum
+                                                                         (if neg? ebtrue ebfalse))))]))))))))))))
 
 ;; By now any quantifiers are universal and are all
 ;; at the top of the predicate.
